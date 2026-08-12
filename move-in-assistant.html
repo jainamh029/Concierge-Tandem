@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concierge Dashboard — Tandem</title>
+<style>
+  :root{
+    --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', monospace;
+    --font-sans: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --navy:#132A45;
+    --navy-2:#1E3E63;
+    --blue:#3E7CA6;
+    --line:#8FB6CC;
+    --paper:#F5F2EA;
+    --paper-2:#ECE7DA;
+    --ink:#1B1B18;
+    --ink-soft:#5B5B54;
+    --stamp:#B84B2A;
+    --ok:#3E6B4F;
+    --radius:3px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:var(--font-sans);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+  }
+  .mono{font-family:var(--font-mono);}
+
+  /* ---------- Header ---------- */
+  header{
+    background:
+      linear-gradient(var(--navy), var(--navy)),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 28px);
+    color:#F5F2EA;
+    padding:48px 32px 56px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--line);
+    border:1px solid var(--line);
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:2px;
+  }
+  h1{
+    font-size:clamp(26px, 4vw, 38px);
+    font-weight:600;
+    margin:16px 0 8px;
+    max-width:680px;
+    letter-spacing:-0.01em;
+  }
+  header p{max-width:600px; color:#CBD9E5; font-size:15.5px;}
+  .corner-tag{
+    position:absolute; right:28px; bottom:18px;
+    font-family:var(--font-mono); font-size:11px; color:var(--line);
+    text-align:right; line-height:1.6;
+  }
+
+  main{max-width:960px; margin:0 auto; padding:36px 24px 80px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .toolbar{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;
+  }
+  .toolbar h2{font-size:18px; font-weight:600;}
+  .toolbar p{font-size:13px; color:var(--ink-soft); max-width:520px;}
+
+  button.primary{
+    font-family:var(--font-mono); font-size:13px; letter-spacing:0.03em;
+    background:var(--navy); color:#F5F2EA; border:none;
+    padding:11px 18px; border-radius:2px; cursor:pointer; white-space:nowrap;
+  }
+  button.primary:hover{background:var(--navy-2);}
+  button.ghost{
+    font-family:var(--font-mono); font-size:12px; background:none; border:1px solid #C9C2AE;
+    color:var(--ink-soft); padding:8px 12px; border-radius:2px; cursor:pointer;
+  }
+  button.ghost:hover{border-color:var(--navy); color:var(--navy);}
+
+  /* ---------- Dashboard ---------- */
+  .summary-row{display:flex; gap:14px; margin-bottom:24px; flex-wrap:wrap;}
+  .summary-stat{
+    background:#fff; border:1px solid #D8D2C2; border-radius:var(--radius);
+    padding:14px 18px; min-width:140px;
+  }
+  .summary-stat .num{font-size:24px; font-weight:600;}
+  .summary-stat .lbl{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);}
+  .summary-stat.warn .num{color:var(--stamp);}
+
+  .dash-list{display:flex; flex-direction:column; gap:10px;}
+  .dash-row{
+    background:#fff; border:1px solid #D8D2C2; border-radius:var(--radius);
+    padding:16px 18px; cursor:pointer; transition:border-color 0.15s ease, background 0.15s ease;
+    display:grid; grid-template-columns:1.6fr 1fr 1fr 1.4fr auto; gap:14px; align-items:center;
+  }
+  .dash-row:hover{border-color:var(--navy);}
+  .dash-row .company{font-size:14.5px; font-weight:600;}
+  .dash-row .industry-tag{
+    font-family:var(--font-mono); font-size:10px; color:var(--blue); border:1px solid var(--blue);
+    border-radius:2px; padding:2px 6px; display:inline-block; margin-top:4px; white-space:nowrap;
+  }
+  .dash-row .field-lbl{font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; color:var(--ink-soft); letter-spacing:0.05em; margin-bottom:2px;}
+  .dash-row .field-val{font-size:13px;}
+  .mini-track{height:5px; background:#E3DECE; border-radius:3px; overflow:hidden; margin-top:5px;}
+  .mini-fill{height:100%; background:var(--ok);}
+  .overdue-badge{
+    font-family:var(--font-mono); font-size:10.5px; background:#FBEAE3; color:var(--stamp);
+    border:1px solid #E3AE97; border-radius:2px; padding:4px 8px; white-space:nowrap;
+  }
+  .clear-badge{
+    font-family:var(--font-mono); font-size:10.5px; background:#EDF4EE; color:var(--ok);
+    border:1px solid #B9D3BE; border-radius:2px; padding:4px 8px; white-space:nowrap;
+  }
+  .empty-state{
+    background:#fff; border:1px dashed #C9C2AE; border-radius:var(--radius);
+    padding:36px 20px; text-align:center; color:var(--ink-soft); font-size:13.5px;
+  }
+
+  /* ---------- Form ---------- */
+  .sheet{background:#fff; border:1px solid #D8D2C2; border-radius:var(--radius);}
+  .sheet-head{display:flex; justify-content:space-between; align-items:baseline; padding:16px 22px; border-bottom:1px solid #E3DECE;}
+  .sheet-head h2{font-size:15px; font-weight:600;}
+  .sheet-head span{font-family:var(--font-mono); font-size:11px; color:var(--ink-soft);}
+  form{padding:22px; display:grid; grid-template-columns:1fr 1fr; gap:16px 18px;}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-family:var(--font-mono); font-size:11px; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-soft);}
+  input, select{
+    font-family:var(--font-sans); font-size:14px; padding:10px 12px;
+    border:1px solid #C9C2AE; border-radius:2px; background:var(--paper); color:var(--ink);
+  }
+  input:focus, select:focus{outline:2px solid var(--blue); outline-offset:1px;}
+  .submit-row{grid-column:1 / -1; display:flex; justify-content:flex-end; gap:10px; margin-top:2px;}
+
+  /* ---------- Detail view ---------- */
+  .detail-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; gap:14px; flex-wrap:wrap;}
+  .detail-head h2{font-size:20px; font-weight:600;}
+  .detail-head .meta{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .section-label{font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin:28px 0 14px;}
+  .section-label:first-of-type{margin-top:0;}
+
+  .ruler-wrap{overflow-x:auto; padding-bottom:6px; margin-bottom:6px;}
+  .ruler{position:relative; height:150px; min-width:640px;}
+  .ruler-line{position:absolute; left:0; right:0; top:96px; height:2px; background:var(--ink);}
+  .tick{position:absolute; top:90px; width:1px; height:14px; background:var(--ink-soft);}
+  .tick-label{position:absolute; top:108px; font-family:var(--font-mono); font-size:10px; color:var(--ink-soft); transform:translateX(-50%);}
+  .pin{position:absolute; top:0; display:flex; flex-direction:column; align-items:center; width:100px; transform:translateX(-50%); cursor:pointer;}
+  .pin .flag{font-family:var(--font-mono); font-size:10px; background:var(--navy); color:#F5F2EA; padding:4px 7px; border-radius:2px; white-space:nowrap; margin-bottom:4px;}
+  .pin.overdue .flag{background:var(--stamp);}
+  .pin .stem{width:1px; flex:1; background:var(--blue); min-height:6px;}
+  .pin .dot{width:7px; height:7px; border-radius:50%; background:var(--blue); margin-top:-3px;}
+  .movein-marker{position:absolute; top:80px; right:0; text-align:right;}
+  .movein-marker .flag{background:var(--stamp);}
+
+  .progress-row{display:flex; align-items:center; gap:14px; margin-bottom:18px;}
+  .progress-track{flex:1; height:6px; background:#E3DECE; border-radius:3px; overflow:hidden;}
+  .progress-fill{height:100%; width:0%; background:var(--ok); transition:width 0.25s ease;}
+  .progress-count{font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); white-space:nowrap;}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:14px;}
+  .card{
+    background:#fff; border:1px solid #D8D2C2; border-radius:var(--radius);
+    padding:16px; display:flex; flex-direction:column; gap:8px;
+    scroll-margin-top:20px; transition:background 0.2s ease, border-color 0.2s ease;
+  }
+  .card.sent{background:#F2F6F3; border-color:#CBDBCF;}
+  .card.overdue{border-color:#E3AE97;}
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .card h3{font-size:14px; font-weight:600;}
+  .weeks-badge{font-family:var(--font-mono); font-size:10px; color:var(--blue); border:1px solid var(--blue); border-radius:2px; padding:2px 6px; white-space:nowrap;}
+  .weeks-badge.overdue{color:var(--stamp); border-color:var(--stamp);}
+  .card p{font-size:12.5px; color:var(--ink-soft); flex:1;}
+  .card-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .card button{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.02em;
+    background:transparent; border:1px solid var(--navy); color:var(--navy);
+    padding:8px 10px; border-radius:2px; cursor:pointer; text-align:left;
+  }
+  .card button:hover{background:var(--navy); color:#F5F2EA;}
+  .card button.sent-btn{border-color:var(--ok); color:var(--ok);}
+  .card button.sent-btn:hover{background:var(--ok); color:#fff;}
+  .card button.sent-btn.is-sent{background:var(--ok); color:#fff;}
+
+  .email-box{display:none; margin-top:2px; flex-direction:column; gap:8px;}
+  .email-box.open{display:flex;}
+  .email-text{padding:12px; background:var(--paper-2); border:1px dashed #C9C2AE; border-radius:2px; font-size:12.5px; white-space:pre-wrap; font-family:var(--font-mono); color:var(--ink);}
+  .copy-btn{align-self:flex-start; font-size:10px !important; padding:6px 9px !important;}
+  .copy-btn.copied{border-color:var(--ok); color:var(--ok);}
+
+  .note-banner{
+    font-size:12.5px; color:var(--ink-soft); background:var(--paper-2); border:1px solid #E3DECE;
+    border-radius:2px; padding:10px 14px; margin-bottom:22px;
+  }
+
+  footer{text-align:center; padding:30px 20px 50px; color:var(--ink-soft); font-family:var(--font-mono); font-size:11px;}
+
+  @media (max-width:640px){
+    form{grid-template-columns:1fr;}
+    header{padding:36px 20px 48px;}
+    .dash-row{grid-template-columns:1fr; gap:10px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">Concept — internal demo</span>
+  <h1>Concierge dashboard</h1>
+  <p>Every active move-in your team is coordinating, in one view — so nothing gets missed while you're juggling several at once. Drafts are ready for your review; you decide what gets sent.</p>
+  <div class="corner-tag mono">
+    TANDEM CONCIERGE<br>
+    SHEET 01 / 01
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD VIEW -->
+  <div class="view active" id="dashboardView">
+    <div class="toolbar">
+      <div>
+        <h2>Active move-ins</h2>
+        <p>A quick scan of what's on track and what needs your attention today.</p>
+      </div>
+      <button type="button" class="primary" id="newMoveInBtn">+ New move-in</button>
+    </div>
+
+    <div class="summary-row" id="summaryRow"></div>
+    <div class="dash-list" id="dashList"></div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div class="view" id="formView">
+    <div class="toolbar">
+      <div>
+        <h2>Add a move-in</h2>
+        <p>Once a lease is signed, add it here to generate its timeline and vendor drafts.</p>
+      </div>
+      <button type="button" class="ghost" id="cancelFormBtn">&larr; Back to dashboard</button>
+    </div>
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2>Deal details</h2>
+        <span class="mono">INTAKE FORM</span>
+      </div>
+      <form id="intakeForm">
+        <div class="field full">
+          <label for="company">Company name</label>
+          <input type="text" id="company" placeholder="e.g. Northlight Studio" required>
+        </div>
+        <div class="field">
+          <label for="sqft">Office size (sq ft)</label>
+          <input type="number" id="sqft" min="200" value="2500" required>
+        </div>
+        <div class="field">
+          <label for="team">Team size</label>
+          <input type="number" id="team" min="1" value="15" required>
+        </div>
+        <div class="field">
+          <label for="industry">Industry</label>
+          <select id="industry">
+            <option value="Tech/AI">Tech / AI</option>
+            <option value="Legal">Legal</option>
+            <option value="Consulting">Consulting</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="moveDate">Target move-in date</label>
+          <input type="date" id="moveDate" required>
+        </div>
+        <div class="field full">
+          <label for="building">Building address (optional)</label>
+          <input type="text" id="building" placeholder="e.g. 55 Water Street, New York, NY">
+        </div>
+        <div class="submit-row">
+          <button type="submit" class="primary">Add to dashboard &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div class="view" id="detailView">
+    <div class="toolbar">
+      <button type="button" class="ghost" id="backToDashBtn">&larr; Back to dashboard</button>
+    </div>
+    <div class="note-banner">Drafts are ready for review — nothing is sent automatically. Mark a vendor as contacted once you've actually reached out.</div>
+    <div class="detail-head">
+      <div>
+        <h2 id="detailCompany"></h2>
+        <div class="meta" id="detailMeta"></div>
+      </div>
+    </div>
+
+    <div class="section-label">Move-in timeline — weeks out from move-in day</div>
+    <div class="ruler-wrap"><div class="ruler" id="ruler"></div></div>
+
+    <div class="section-label">Vendor checklist</div>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-count mono" id="progressCount">0 of 0 contacted</div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+</main>
+
+<footer>Demo built for evaluation purposes — sample data, not a real vendor network.</footer>
+
+<script>
+const CATS = [
+  {id:'furniture', name:'Furniture', base:8, blurb:'Order desks, seating, and storage sized to your headcount.'},
+  {id:'internet', name:'Internet service', base:6, blurb:'Line up ISP install so connectivity is live before day one.'},
+  {id:'utilities', name:'Utilities', base:5, blurb:'Set up electric, water, and gas accounts under the new lease.'},
+  {id:'security', name:'Access control', base:5, blurb:'Configure access badges and building security protocols.'},
+  {id:'insurance', name:'Insurance', base:4, blurb:'Confirm tenant liability and property coverage is active.'},
+  {id:'deposits', name:'Deposits & fees', base:4, blurb:'Settle security deposit and any outstanding move-in fees.'},
+  {id:'moving', name:'Moving logistics', base:3, blurb:'Book movers and plan the physical relocation timeline.'},
+  {id:'janitorial', name:'Cleaning', base:2, blurb:'Schedule a move-in clean and set an ongoing service.'},
+];
+
+function computeWeeks(sqft, team, industry){
+  const large = sqft > 5000 || team > 30;
+  const small = sqft < 1500 && team < 10;
+  return CATS.map(c => {
+    let w = c.base;
+    if(large && ['furniture','moving'].includes(c.id)) w += 2;
+    if(small && c.id === 'furniture') w = Math.max(2, w - 1);
+    if(industry === 'Legal' && c.id === 'deposits') w += 1;
+    if(industry === 'Tech/AI' && c.id === 'security') w += 1;
+    if(industry === 'Consulting' && c.id === 'furniture') w += 1;
+    return {...c, weeks: w};
+  }).sort((a,b) => b.weeks - a.weeks);
+}
+
+function weeksUntil(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr + 'T00:00:00');
+  return (target - today) / (7*24*60*60*1000);
+}
+
+function draftEmail(cat, data){
+  const {sqft, team, industry, moveDate, building} = data;
+  const addr = building ? building : '[building address]';
+  const dateStr = new Date(moveDate + 'T00:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  const templates = {
+    furniture: `We're outfitting a ${sqft} sq ft office for a ${team}-person ${industry} team at ${addr}, moving in ${dateStr}. Could you send a quote for desks, seating, and storage sized to that headcount, with delivery scheduled ahead of our move-in date?`,
+    internet: `We need internet service installed and tested at ${addr} before ${dateStr}. Team size is ${team}, office is ${sqft} sq ft. Please share available plans and your typical install lead time.`,
+    utilities: `We're setting up electric, water, and gas accounts for a new lease at ${addr}, occupancy beginning ${dateStr}. Please advise on account setup requirements and timing.`,
+    security: `Could you help us configure building access and badging for ${team} employees ahead of our move-in on ${dateStr} at ${addr}? Happy to share our headcount and access-level breakdown.`,
+    insurance: `We need tenant liability and property coverage in place for our new office at ${addr} by ${dateStr}. Could you send a quote based on ${sqft} sq ft and a ${team}-person team?`,
+    deposits: `Following up to confirm the security deposit and any outstanding move-in fees for our lease at ${addr}, ahead of occupancy on ${dateStr}. Could you send a summary of what's owed and by when?`,
+    moving: `Looking to book a move for ${team} employees into ${addr} around ${dateStr}. Office is ${sqft} sq ft. Could you share availability and a rough estimate?`,
+    janitorial: `We'd like to schedule a move-in clean and set up ongoing cleaning service for ${sqft} sq ft at ${addr}, starting around ${dateStr}.`,
+  };
+  return `Subject: ${cat.name} — new office at ${addr}\n\nHi,\n\n${templates[cat.id]}\n\nThanks,\n[Your name]`;
+}
+
+/* ---------- State: multiple concurrent move-ins ---------- */
+let moveIns = [];
+let nextId = 1;
+let currentDetailId = null;
+
+function addMoveIn(data){
+  const items = computeWeeks(data.sqft, data.team, data.industry);
+  const moveIn = {id: nextId++, ...data, items, sent: new Set()};
+  moveIns.push(moveIn);
+  return moveIn;
+}
+
+function overdueCount(moveIn){
+  const wUntil = weeksUntil(moveIn.moveDate);
+  return moveIn.items.filter(c => wUntil <= c.weeks && !moveIn.sent.has(c.id)).length;
+}
+
+function progressPct(moveIn){
+  return moveIn.items.length ? Math.round((moveIn.sent.size / moveIn.items.length) * 100) : 0;
+}
+
+/* ---------- View switching ---------- */
+function showView(id){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---------- Dashboard rendering ---------- */
+function renderDashboard(){
+  const summaryRow = document.getElementById('summaryRow');
+  const dashList = document.getElementById('dashList');
+
+  const totalOverdue = moveIns.reduce((sum, m) => sum + (overdueCount(m) > 0 ? 1 : 0), 0);
+  const avgProgress = moveIns.length ? Math.round(moveIns.reduce((s,m) => s + progressPct(m), 0) / moveIns.length) : 0;
+
+  summaryRow.innerHTML = `
+    <div class="summary-stat">
+      <div class="num">${moveIns.length}</div>
+      <div class="lbl">Active move-ins</div>
+    </div>
+    <div class="summary-stat ${totalOverdue > 0 ? 'warn' : ''}">
+      <div class="num">${totalOverdue}</div>
+      <div class="lbl">Need attention</div>
+    </div>
+    <div class="summary-stat">
+      <div class="num">${avgProgress}%</div>
+      <div class="lbl">Avg. contacted</div>
+    </div>
+  `;
+
+  if(moveIns.length === 0){
+    dashList.innerHTML = `<div class="empty-state">No active move-ins yet. Click "+ New move-in" to add one.</div>`;
+    return;
+  }
+
+  dashList.innerHTML = '';
+  moveIns
+    .slice()
+    .sort((a,b) => new Date(a.moveDate) - new Date(b.moveDate))
+    .forEach(m => {
+      const wUntil = Math.round(weeksUntil(m.moveDate));
+      const overdue = overdueCount(m);
+      const pct = progressPct(m);
+      const row = document.createElement('div');
+      row.className = 'dash-row';
+      row.innerHTML = `
+        <div>
+          <div class="company">${m.company}</div>
+          <span class="industry-tag">${m.industry}</span>
+        </div>
+        <div>
+          <div class="field-lbl">Move-in</div>
+          <div class="field-val">${new Date(m.moveDate + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
+        </div>
+        <div>
+          <div class="field-lbl">Weeks out</div>
+          <div class="field-val">${wUntil >= 0 ? wUntil + ' wk' : 'Past due'}</div>
+        </div>
+        <div>
+          <div class="field-lbl">Vendors contacted</div>
+          <div class="field-val">${m.sent.size} of ${m.items.length}</div>
+          <div class="mini-track"><div class="mini-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div>${overdue > 0 ? `<span class="overdue-badge">${overdue} need outreach</span>` : `<span class="clear-badge">On track</span>`}</div>
+      `;
+      row.addEventListener('click', () => openDetail(m.id));
+      dashList.appendChild(row);
+    });
+}
+
+/* ---------- Detail view ---------- */
+function openDetail(id){
+  currentDetailId = id;
+  const m = moveIns.find(x => x.id === id);
+  if(!m) return;
+
+  document.getElementById('detailCompany').textContent = m.company;
+  document.getElementById('detailMeta').textContent =
+    `${m.sqft.toLocaleString()} sq ft · ${m.team}-person team · ${m.industry} · Move-in ${new Date(m.moveDate + 'T00:00:00').toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}`;
+
+  renderRuler(m);
+  renderCards(m);
+  showView('detailView');
+}
+
+function renderRuler(m){
+  const rulerEl = document.getElementById('ruler');
+  const items = m.items;
+  const pxPerWeek = 60;
+  const maxWeeks = Math.max(...items.map(i => i.weeks)) + 1;
+  const width = maxWeeks * pxPerWeek + 100;
+  rulerEl.style.minWidth = width + 'px';
+  rulerEl.innerHTML = '';
+
+  const line = document.createElement('div');
+  line.className = 'ruler-line';
+  rulerEl.appendChild(line);
+
+  for(let w = 0; w <= maxWeeks; w++){
+    const x = width - 60 - (w * pxPerWeek);
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.left = x + 'px';
+    rulerEl.appendChild(tick);
+
+    const tl = document.createElement('div');
+    tl.className = 'tick-label';
+    tl.style.left = x + 'px';
+    tl.textContent = w === 0 ? 'DAY 0' : `-${w}wk`;
+    rulerEl.appendChild(tl);
+  }
+
+  const wUntil = weeksUntil(m.moveDate);
+  items.forEach((item, idx) => {
+    const x = width - 60 - (item.weeks * pxPerWeek);
+    const isOverdue = wUntil <= item.weeks && !m.sent.has(item.id);
+    const pin = document.createElement('div');
+    pin.className = 'pin' + (isOverdue ? ' overdue' : '');
+    pin.style.left = x + 'px';
+    pin.style.height = (20 + (idx % 3) * 20) + 'px';
+    pin.innerHTML = `<div class="flag">${item.name}</div><div class="stem"></div><div class="dot"></div>`;
+    pin.addEventListener('click', () => {
+      const target = document.getElementById('card-' + item.id);
+      if(target && typeof target.scrollIntoView === 'function'){
+        try{ target.scrollIntoView({behavior:'smooth', block:'center'}); }catch(err){}
+      }
+    });
+    rulerEl.appendChild(pin);
+  });
+
+  const marker = document.createElement('div');
+  marker.className = 'movein-marker';
+  marker.innerHTML = `<div class="flag">Move-in day</div>`;
+  rulerEl.appendChild(marker);
+
+  rulerEl.style.height = '180px';
+}
+
+function updateProgress(m){
+  const fill = document.getElementById('progressFill');
+  const count = document.getElementById('progressCount');
+  const pct = progressPct(m);
+  fill.style.width = pct + '%';
+  count.textContent = `${m.sent.size} of ${m.items.length} contacted`;
+}
+
+function renderCards(m){
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = '';
+  const wUntil = weeksUntil(m.moveDate);
+
+  m.items.forEach(item => {
+    const isSent = m.sent.has(item.id);
+    const isOverdue = wUntil <= item.weeks && !isSent;
+    const card = document.createElement('div');
+    card.className = 'card' + (isSent ? ' sent' : '') + (isOverdue ? ' overdue' : '');
+    card.id = 'card-' + item.id;
+    card.innerHTML = `
+      <div class="card-top">
+        <h3>${item.name}</h3>
+        <span class="weeks-badge${isOverdue ? ' overdue' : ''}">start -${item.weeks}wk</span>
+      </div>
+      <p>${item.blurb}</p>
+      <div class="card-actions">
+        <button type="button" class="draft-btn">Draft outreach email &rarr;</button>
+        <button type="button" class="sent-btn${isSent ? ' is-sent' : ''}">${isSent ? 'Contacted ✓' : 'Mark as contacted'}</button>
+      </div>
+      <div class="email-box">
+        <div class="email-text"></div>
+        <button type="button" class="copy-btn">Copy to clipboard</button>
+      </div>
+    `;
+    const draftBtn = card.querySelector('.draft-btn');
+    const sentBtn = card.querySelector('.sent-btn');
+    const copyBtn = card.querySelector('.copy-btn');
+    const box = card.querySelector('.email-box');
+    const text = card.querySelector('.email-text');
+
+    draftBtn.addEventListener('click', () => {
+      if(!box.classList.contains('open')){
+        text.textContent = draftEmail(item, m);
+      }
+      box.classList.toggle('open');
+      draftBtn.textContent = box.classList.contains('open') ? 'Hide draft' : 'Draft outreach email →';
+    });
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(text.textContent).then(() => {
+        copyBtn.textContent = 'Copied';
+        copyBtn.classList.add('copied');
+        setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; copyBtn.classList.remove('copied'); }, 1500);
+      });
+    });
+
+    sentBtn.addEventListener('click', () => {
+      if(m.sent.has(item.id)){ m.sent.delete(item.id); }
+      else{ m.sent.add(item.id); }
+      renderCards(m);
+      renderRuler(m);
+      updateProgress(m);
+    });
+
+    cardsEl.appendChild(card);
+  });
+
+  updateProgress(m);
+}
+
+/* ---------- Wiring ---------- */
+document.getElementById('newMoveInBtn').addEventListener('click', () => showView('formView'));
+document.getElementById('cancelFormBtn').addEventListener('click', () => showView('dashboardView'));
+document.getElementById('backToDashBtn').addEventListener('click', () => { renderDashboard(); showView('dashboardView'); });
+
+document.getElementById('intakeForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const data = {
+    company: document.getElementById('company').value.trim() || 'Untitled company',
+    sqft: Number(document.getElementById('sqft').value),
+    team: Number(document.getElementById('team').value),
+    industry: document.getElementById('industry').value,
+    moveDate: document.getElementById('moveDate').value,
+    building: document.getElementById('building').value.trim(),
+  };
+  if(!data.moveDate){ alert('Please choose a target move-in date.'); return; }
+
+  const m = addMoveIn(data);
+  this.reset();
+  document.getElementById('sqft').value = 2500;
+  document.getElementById('team').value = 15;
+  setDefaultDate();
+  renderDashboard();
+  openDetail(m.id);
+});
+
+function setDefaultDate(){
+  const d = new Date();
+  d.setDate(d.getDate() + 42);
+  document.getElementById('moveDate').value = d.toISOString().split('T')[0];
+}
+setDefaultDate();
+
+/* ---------- Seed sample data so the dashboard isn't empty ---------- */
+function seed(){
+  const today = new Date();
+  const mk = (offsetDays) => {
+    const d = new Date(today); d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().split('T')[0];
+  };
+  addMoveIn({company:'Northlight Studio', sqft:1800, team:9, industry:'Consulting', moveDate:mk(18), building:'220 Congress St, Boston, MA'});
+  addMoveIn({company:'Verano Labs', sqft:6200, team:38, industry:'Tech/AI', moveDate:mk(30), building:'55 Water Street, New York, NY'});
+  addMoveIn({company:'Halden & Cross', sqft:3400, team:22, industry:'Legal', moveDate:mk(60), building:'101 California St, San Francisco, CA'});
+}
+seed();
+renderDashboard();
+</script>
+</body>
+</html>
