@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem — Your personal operations concierge</title>
+<meta name="description" content="Tandem turns travel changes, client dinners, appointments, and life admin into completed plans. It asks before anything is booked, sent, or paid for. Interactive prototype with sample data.">
+<meta name="theme-color" content="#2F3EA8">
+<meta property="og:title" content="Tandem — Your personal operations concierge">
+<meta property="og:description" content="Try a simulated task: Tandem coordinates the details and asks for your approval before anything happens.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232F3EA8'/%3E%3Cpath d='M9 10h14v3.4h-5.2V23h-3.6v-9.6H9z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#demo">Skip to the live demo</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="Tandem home"><span class="brand-mark" aria-hidden="true">T</span>Tandem</a>
+    <nav aria-label="Primary">
+      <a href="#how">How it works</a>
+      <a href="#compare">Compare</a>
+      <a href="#control">Control</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#access" id="nav-access">Apply for early access</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- 1. Hero + 2. Interactive task simulation -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">For founders, executives, and busy professionals</p>
+      <h1>Your personal operations concierge.</h1>
+      <p class="lede">Tandem turns complex requests—travel changes, client dinners, appointments, and life admin—into completed plans. It learns your preferences, coordinates the details, and asks before anything is booked, sent, or paid for.</p>
+      <div class="cta-row">
+        <button type="button" class="btn btn-primary btn-lg" id="cta-try">Try a live task</button>
+        <a class="btn btn-secondary btn-lg" href="#how" id="cta-how">See how Tandem works</a>
+      </div>
+      <p class="trust-line">Nothing gets booked, sent, purchased, or added to your calendar without your approval.</p>
+
+      <section class="console" id="demo" aria-labelledby="demo-title">
+        <div class="console-bar">
+          <span class="console-title" id="demo-title">Tandem command center</span>
+          <span class="tag">Demo · sample data · nothing is booked</span>
+        </div>
+        <form id="task-form" class="console-input">
+          <label for="task-input" class="sr-only">Describe the task for Tandem</label>
+          <textarea id="task-input" rows="3" spellcheck="true"></textarea>
+          <div class="console-controls">
+            <div class="chips-row" id="chips" aria-label="Example tasks"></div>
+            <button type="submit" class="btn btn-primary">Run task</button>
+          </div>
+        </form>
+        <div id="demo-output" class="console-output"></div>
+        <p id="demo-status" class="sr-only" role="status" aria-live="polite"></p>
+      </section>
+      <noscript><p class="notice">The interactive demo needs JavaScript.</p></noscript>
+    </div>
+  </section>
+
+  <!-- 3. Explain simply -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <h2 id="how-title">From request to done.</h2>
+      <ol class="how" id="how-steps"></ol>
+    </div>
+  </section>
+
+  <!-- 4. Differentiation -->
+  <section class="section section-alt" id="compare" aria-labelledby="compare-title">
+    <div class="wrap">
+      <h2 id="compare-title">More than recommendations.</h2>
+      <div id="compare-table"></div>
+    </div>
+  </section>
+
+  <!-- 5. Use cases -->
+  <section class="section" id="usecases-section" aria-labelledby="uc-title">
+    <div class="wrap">
+      <h2 id="uc-title">Built for the work around your work.</h2>
+      <div class="grid-4" id="usecases"></div>
+    </div>
+  </section>
+
+  <!-- 6. Trust and control -->
+  <section class="section section-alt" id="control" aria-labelledby="control-title">
+    <div class="wrap">
+      <h2 id="control-title">You stay in control.</h2>
+      <div class="control-grid">
+        <ul class="principles" id="principles"></ul>
+
+        <div class="mock" aria-label="Sample control panel (demo)">
+          <div class="mock-bar"><span>Control panel</span><span class="tag">Demo · sample data</span></div>
+          <div class="mock-grid">
+            <div class="mock-box">
+              <h3>Saved preferences</h3>
+              <div class="chips" id="mock-prefs"></div>
+              <form id="pref-form" class="inline-form">
+                <label class="sr-only" for="pref-input">Add a preference</label>
+                <input id="pref-input" type="text" placeholder="Add a preference" maxlength="60">
+                <button type="submit" class="btn btn-secondary btn-sm">Add</button>
+              </form>
+            </div>
+            <div class="mock-box">
+              <h3>Connected tools</h3>
+              <ul class="list" id="mock-tools"></ul>
+              <p class="fine">Optional. No real accounts are connected in this demo.</p>
+            </div>
+            <div class="mock-box">
+              <h3>Pending approvals</h3>
+              <ul class="list" id="mock-pending"></ul>
+              <p class="fine">Run the live task above to see an approval appear here.</p>
+            </div>
+            <div class="mock-box">
+              <h3>Recent activity</h3>
+              <ul class="list" id="mock-activity"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Early access -->
+  <section class="section" id="access" aria-labelledby="access-title">
+    <div class="wrap access">
+      <div>
+        <h2 id="access-title">Help build the personal operations layer.</h2>
+        <p class="lede">We are inviting a small group of founders, operators, and busy professionals to test Tandem on real coordination tasks. Early users will shape which workflows we automate first.</p>
+      </div>
+      <div class="access-card">
+        <div id="access-form-wrap">
+          <form id="access-form" novalidate>
+            <div class="fields"></div>
+            <p class="fine" id="access-note" hidden>This prototype has no backend. Your answers are saved in this browser only.</p>
+            <p class="field-error" id="access-error" role="alert" hidden>Something went wrong sending that. Please try again.</p>
+            <button type="submit" class="btn btn-primary btn-lg">Apply for early access</button>
+          </form>
+        </div>
+        <div id="access-success" class="success" tabindex="-1" hidden>
+          <p>Thanks — we’ll review your request and follow up with selected early testers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p><strong>Tandem</strong> · Interactive prototype. All restaurants, prices, calendars, and activity shown are sample data. No bookings, messages, or payments are made.</p>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/components.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
