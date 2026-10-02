@@ -3,145 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tandem Concierge — From signed lease to first day</title>
-<meta name="description" content="After the lease is signed, Tandem Concierge plans the move-in, prepares vendor requests, and asks for approval before anything is sent, booked, or paid for. Interactive concept with sample data.">
-<meta name="theme-color" content="#2F3EA8">
-<meta property="og:title" content="Tandem Concierge — From signed lease to first day">
-<meta property="og:description" content="Try a simulated move-in: Tandem coordinates vendors and deadlines, and asks for approval before anything happens.">
+<title>Tandem Search Workspace — Find the right office faster</title>
+<meta name="description" content="A prototype workflow for finding, comparing, and touring office space: a shortlist built around how your team works, with a local advisor for the judgment calls. Sample data only.">
+<meta name="theme-color" content="#12294A">
+<meta property="og:title" content="Tandem Search Workspace">
+<meta property="og:description" content="Find the right office faster with a shortlist built around how your team works. Interactive prototype with sample data.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232F3EA8'/%3E%3Cpath d='M9 10h14v3.4h-5.2V23h-3.6v-9.6H9z' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312294A'/%3E%3Cpath d='M9 10h14v3.4h-5.2V23h-3.6v-9.6H9z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<a class="skip" href="#demo">Skip to the live demo</a>
+<a class="skip" href="#search">Skip to the search workspace</a>
 
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="#top" aria-label="Tandem home"><span class="brand-mark" aria-hidden="true">T</span>Tandem</a>
+    <a class="brand" href="#top" aria-label="Tandem Search Workspace home"><span class="brand-mark" aria-hidden="true">T</span>Tandem <span class="brand-sub">Search Workspace</span></a>
     <nav aria-label="Primary">
-      <a href="#how">How it works</a>
+      <a href="#search">Search</a>
+      <a href="#shortlist">Shortlist</a>
       <a href="#compare">Compare</a>
-      <a href="#control">Control</a>
+      <a href="#tours">Tours</a>
+      <a href="#how">Human + AI</a>
     </nav>
-    <a class="btn btn-primary btn-sm" href="#access" id="nav-access">Apply for early access</a>
+    <button type="button" class="btn btn-primary btn-sm" id="nav-start">Start an office search</button>
   </div>
 </header>
 
 <main id="top">
+  <div id="hero-mount"></div>
+  <noscript><div class="wrap"><p class="notice">This interactive prototype needs JavaScript.</p></div></noscript>
 
-  <!-- 1. Hero + 2. Interactive task simulation -->
-  <section class="hero">
+  <section class="section" id="search" aria-labelledby="search-title">
     <div class="wrap">
-      <p class="eyebrow">Tandem Concierge · concept for after the lease is signed</p>
-      <h1>From signed lease to first day, handled.</h1>
-      <p class="lede">Tandem helps teams find the right office. Tandem Concierge picks up once the lease is signed: it plans the move-in, coordinates vendors and deadlines, and asks before anything is booked, sent, or paid for.</p>
-      <div class="cta-row">
-        <button type="button" class="btn btn-primary btn-lg" id="cta-try">Try a live task</button>
-        <a class="btn btn-secondary btn-lg" href="#how" id="cta-how">See how Tandem works</a>
-      </div>
-      <p class="trust-line">Nothing gets booked, sent, purchased, or added to your calendar without your approval.</p>
-
-      <section class="console" id="demo" aria-labelledby="demo-title">
-        <div class="console-bar">
-          <span class="console-title" id="demo-title">Tandem command center</span>
-          <span class="tag">Demo · sample data · nothing is sent</span>
-        </div>
-        <form id="task-form" class="console-input">
-          <label for="task-input" class="sr-only">Describe the task for Tandem</label>
-          <textarea id="task-input" rows="3" spellcheck="true"></textarea>
-          <div class="console-controls">
-            <div class="chips-row" id="chips" aria-label="Example tasks"></div>
-            <button type="submit" class="btn btn-primary">Run task</button>
-          </div>
-        </form>
-        <div id="demo-output" class="console-output"></div>
-        <p id="demo-status" class="sr-only" role="status" aria-live="polite"></p>
-      </section>
-      <noscript><p class="notice">The interactive demo needs JavaScript.</p></noscript>
+      <p class="eyebrow">1 · Define requirements</p>
+      <h2 id="search-title">Turn a vague need into a structured brief.</h2>
+      <p class="section-lede">Nine short questions, pre-filled with an example startup. Edit any answer and the brief, shortlist, and ranking change with it.</p>
+      <div id="workspace-mount"></div>
     </div>
   </section>
 
-  <!-- 3. Explain simply -->
+  <section class="section section-alt" id="shortlist" aria-labelledby="sl-title">
+    <div class="wrap">
+      <p class="eyebrow">2 · Shortlist</p>
+      <h2 id="sl-title">A shortlist built around how your team works.</h2>
+      <p class="section-lede">Four sample spaces ranked by the Tandem fit score — based on your stated priorities. It is a way to organize a decision, not an objective rating.</p>
+      <div id="sl-toolbar"></div>
+      <div id="sl-priorities" hidden></div>
+      <div id="sl-body"></div>
+    </div>
+  </section>
+
+  <section class="section" id="compare" aria-labelledby="cmp-title">
+    <div class="wrap">
+      <p class="eyebrow">3 · Compare</p>
+      <h2 id="cmp-title">Compare up to three spaces side by side.</h2>
+      <div id="compare-mount"></div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="tours" aria-labelledby="tour-title">
+    <div class="wrap">
+      <p class="eyebrow">4 · Tour</p>
+      <h2 id="tour-title">Turn a shortlist into a decision.</h2>
+      <p class="section-lede">Tandem handles the scheduling and follow-up. A local advisor handles the tour.</p>
+      <div id="tours-mount"></div>
+    </div>
+  </section>
+
   <section class="section" id="how" aria-labelledby="how-title">
     <div class="wrap">
-      <h2 id="how-title">From request to done.</h2>
-      <ol class="how" id="how-steps"></ol>
+      <p class="eyebrow">Operating model</p>
+      <h2 id="how-title">AI handles the busywork. People handle the judgment.</h2>
+      <div id="boundary-mount"></div>
     </div>
   </section>
 
-  <!-- 4. Differentiation -->
-  <section class="section section-alt" id="compare" aria-labelledby="compare-title">
+  <section class="section section-alt" id="learning" aria-labelledby="learn-title">
     <div class="wrap">
-      <h2 id="compare-title">More than recommendations.</h2>
-      <div id="compare-table"></div>
+      <p class="eyebrow">Product learning</p>
+      <h2 id="learn-title">Every search makes Tandem smarter.</h2>
+      <p class="section-lede">Each search produces structured signals about what predicts a good match and where people need a human. These are the questions worth tracking.</p>
+      <div id="insight-mount"></div>
     </div>
   </section>
 
-  <!-- 5. Use cases -->
-  <section class="section" id="usecases-section" aria-labelledby="uc-title">
-    <div class="wrap">
-      <h2 id="uc-title">Built for the work around your work.</h2>
-      <div class="grid-4" id="usecases"></div>
-    </div>
-  </section>
-
-  <!-- 6. Trust and control -->
-  <section class="section section-alt" id="control" aria-labelledby="control-title">
-    <div class="wrap">
-      <h2 id="control-title">You stay in control.</h2>
-      <div class="control-grid">
-        <ul class="principles" id="principles"></ul>
-
-        <div class="mock" aria-label="Sample control panel (demo)">
-          <div class="mock-bar"><span>Control panel</span><span class="tag">Demo · sample data</span></div>
-          <div class="mock-grid">
-            <div class="mock-box">
-              <h3>Saved preferences</h3>
-              <div class="chips" id="mock-prefs"></div>
-              <form id="pref-form" class="inline-form">
-                <label class="sr-only" for="pref-input">Add a preference</label>
-                <input id="pref-input" type="text" placeholder="Add a preference" maxlength="60">
-                <button type="submit" class="btn btn-secondary btn-sm">Add</button>
-              </form>
-            </div>
-            <div class="mock-box">
-              <h3>Connected tools</h3>
-              <ul class="list" id="mock-tools"></ul>
-              <p class="fine">Optional. No real accounts are connected in this demo.</p>
-            </div>
-            <div class="mock-box">
-              <h3>Pending approvals</h3>
-              <ul class="list" id="mock-pending"></ul>
-              <p class="fine">Run the live task above to see an approval appear here.</p>
-            </div>
-            <div class="mock-box">
-              <h3>Recent activity</h3>
-              <ul class="list" id="mock-activity"></ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 7. Early access -->
-  <section class="section" id="access" aria-labelledby="access-title">
-    <div class="wrap access">
+  <section class="section closing" id="advisor" aria-labelledby="close-title">
+    <div class="wrap closing-grid">
       <div>
-        <h2 id="access-title">Help build the post-lease layer.</h2>
-        <p class="lede">We are inviting founders, operations leads, and office managers who are leasing or have just leased space to test Tandem Concierge on real move-in tasks. Early users will shape which workflows we automate first.</p>
-      </div>
-      <div class="access-card">
-        <div id="access-form-wrap">
-          <form id="access-form" novalidate>
-            <div class="fields"></div>
-            <p class="fine" id="access-note" hidden>This prototype has no backend. Your answers are saved in this browser only.</p>
-            <p class="field-error" id="access-error" role="alert" hidden>Something went wrong sending that. Please try again.</p>
-            <button type="submit" class="btn btn-primary btn-lg">Apply for early access</button>
-          </form>
+        <h2 id="close-title">Searching for office space should not become a second full-time job.</h2>
+        <p class="lede">Tell us what your team needs. Tandem will help you build a stronger shortlist, tour the right spaces, and move toward a lease with confidence.</p>
+        <div class="cta-row">
+          <button type="button" class="btn btn-primary btn-lg" id="cta-start">Start your search</button>
+          <button type="button" class="btn btn-secondary btn-lg" id="cta-advisor">Talk to a local advisor</button>
         </div>
-        <div id="access-success" class="success" tabindex="-1" hidden>
-          <p>Thanks — we’ll review your request and follow up with selected early testers.</p>
+      </div>
+      <div class="form-card">
+        <div id="advisor-form-mount"></div>
+        <div id="advisor-success" class="success" tabindex="-1" hidden>
+          <p>Advisor request prepared.</p>
+          <p class="fine">In the live product, a Tandem advisor would follow up. This prototype has no backend, so your request is saved in this browser only.</p>
         </div>
       </div>
     </div>
@@ -150,14 +110,16 @@
 
 <footer class="footer">
   <div class="wrap">
-    <p><strong>Tandem Concierge</strong> · Interactive concept. All vendors, costs, calendars, and activity shown are sample data. No vendors are contacted and no payments are made. <a href="move-in/">See the earlier concierge-team dashboard prototype</a>.</p>
+    <p><strong>Tandem Search Workspace</strong> · An independent interactive concept, not an official Tandem product. All offices, prices, availability, scores, and recommendations are sample data, not live listings. No tours are booked and no one is contacted.</p>
+    <p><a href="move-in/">Beyond the lease: an earlier prototype for post-lease move-in coordination</a></p>
   </div>
 </footer>
+<p id="sr-status" class="sr-only" role="status" aria-live="polite"></p>
 
 <script src="js/data.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/model.js"></script>
 <script src="js/components.js"></script>
-<script src="js/demo.js"></script>
-<script src="js/main.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

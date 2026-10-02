@@ -12,11 +12,11 @@
   window.Tandem = window.Tandem || {};
   window.Tandem.track = track;
   window.Tandem.EVENTS = {
-    HERO_CTA: 'hero_cta_clicked',
-    DEMO_STARTED: 'task_demo_started',
-    DEMO_COMPLETED: 'task_demo_completed',
-    APPROVAL: 'approval_button_clicked',
-    FORM_STARTED: 'waitlist_form_started',
-    FORM_SUBMITTED: 'waitlist_form_submitted',
+    SEARCH_STARTED: 'office_search_started',
+    DISCOVERY_COMPLETED: 'discovery_completed',
+    SPACE_SHORTLISTED: 'space_shortlisted',
+    COMPARISON_OPENED: 'comparison_opened',
+    TOUR_REQUESTED: 'tour_requested',
+    ADVISOR_CTA: 'advisor_cta_clicked',
   };
 })();

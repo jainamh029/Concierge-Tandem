@@ -1,36 +1,48 @@
-# Tandem Concierge — post-lease move-in concept (interactive prototype)
+# Tandem Search Workspace — interactive prototype
 
 Live: https://jainamh029.github.io/Concierge-Tandem/
 
-A static concept for what could follow Tandem's office search: a team signs a lease, then a concierge plans the move-in. The demo walks one workflow end to end: Tandem checks lease dates and constraints, applies saved preferences, compares furniture options, builds a start-by timeline for four vendor requests, and **asks for approval** before the (simulated) outreach and calendar deadlines.
+An independent concept (not an official Tandem product) showing how an AI-native office-leasing workflow could help a growing team go from vague needs to a tour-ready shortlist, while keeping a human advisor where judgment and trust matter.
 
-All vendors, costs, lead times, calendars, and activity are **sample data**. Nothing is contacted, sent, or paid for.
+**All offices, prices, availability, scores, and recommendations are sample data.** Nothing is booked and no one is contacted.
+
+## What it demonstrates
+
+1. **Discovery** — nine pre-filled questions turn a vague need into structured requirements and an assembled brief, including what Tandem noticed and what an advisor would ask next.
+2. **Shortlist** — four sample spaces with a *Tandem fit score — based on your stated priorities*. The score is explainable (six weighted factors) and adjustable; it is not presented as objective truth.
+3. **Comparison** — up to three spaces side by side with a decision memo that states its own limits.
+4. **Tour coordination** — a seven-step flow with owners (you / Tandem / advisor), a sample itinerary, and a simulated "tour request prepared" state.
+5. **Human + AI boundary** — what software handles and what a local advisor handles.
+6. **Product learning** — an illustrative insight that, when applied, changes the discovery flow and the weighting (labeled as example, not Tandem data).
+
+Default answers reproduce the example scenario: scores 91 / 87 / 85 for Flatiron / NoMad / Chelsea.
 
 ## Structure
 
 ```
-index.html          Page structure and section mount points
+index.html          Page structure and mount points
 css/styles.css      Design tokens and styles
-js/data.js          All mock data and copy for the demo (edit content here)
-js/analytics.js     Event placeholders: Tandem.track(name, props)
-js/components.js    Reusable components: Button, Card, Chip, WorkflowStep,
-                    OptionCard, ApprovalPanel, UseCaseCard, ComparisonTable, Field
-js/demo.js          Task simulation state machine (7 stages, compare, adjust, approve)
-js/main.js          Page wiring, trust panel, early-access form
-move-in/            Earlier prototype: a dashboard for a concierge team running several move-ins at once
+js/data.js          All mock data and copy (listings, questions, factors, itinerary)
+js/model.js         Pure logic: scoring, brief text, itinerary, decision memo
+js/components.js    Reusable components: Hero, DiscoveryStep, AIBrief, ListingCard,
+                    MatchExplanation, ComparisonTable, DecisionMemo, TourItinerary,
+                    TourPlanner, HumanAIBoundary, InsightCard, CtaForm
+js/app.js           State and event wiring
+js/analytics.js     Event placeholders
+move-in/            Earlier prototype: post-lease move-in coordination
 ```
 
-No build step. Scripts are classic (not ES modules), so `index.html` also works when opened directly from disk.
+No build step. Scripts are classic (not ES modules), so `index.html` also works when opened from disk.
 
 ## Analytics events
 
-Pushed to `window.dataLayer` and logged with `console.debug`. Swap the body of `track()` in `js/analytics.js` for your provider.
+Pushed to `window.dataLayer` and logged with `console.debug`. Swap `track()` in `js/analytics.js` for your provider.
 
-`hero_cta_clicked`, `task_demo_started`, `task_demo_completed`, `approval_button_clicked`, `waitlist_form_started`, `waitlist_form_submitted`
+`office_search_started`, `discovery_completed`, `space_shortlisted`, `comparison_opened`, `tour_requested`, `advisor_cta_clicked`
 
-## Receiving early-access submissions
+## Receiving advisor requests
 
-There is no backend. Submissions are saved to `localStorage` in the visitor's browser only. To collect them, set `CONFIG.waitlistEndpoint` in `js/data.js` to a form endpoint (for example Formspree). The form will POST JSON and the "saved in this browser only" note disappears.
+There is no backend; requests are saved to `localStorage` in the visitor's browser. Set `CONFIG.endpoint` in `js/data.js` to a form endpoint (for example Formspree) to receive them.
 
 ## Run locally
 
