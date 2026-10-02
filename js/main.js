@@ -82,7 +82,7 @@
       : '<li class="fine">Nothing waiting on you.</li>';
     if (snap.phase === 'done' && lastPhase !== 'done' && snap.completed) {
       activity = [
-        { text: `Simulated: reserved ${snap.completed.name} and added it to the calendar after your approval.`, when: 'Just now' },
+        { text: `Simulated: sent 4 vendor requests (furniture: ${snap.completed.name}) and added deadlines to the calendar after your approval.`, when: 'Just now' },
         ...activity,
       ];
       renderActivity();
@@ -103,7 +103,7 @@
       label: 'The task you would most want Tandem to handle',
       required: true,
       textarea: true,
-      placeholder: 'For example: rebook travel when a flight is canceled and move my meetings.',
+      placeholder: 'For example: coordinate internet, furniture, and badges for our new 20-person office.',
     }),
     UI.Field({ id: 'wl-hours', label: 'How many hours per week do you spend on scheduling, travel, or personal admin?', optional: true, options: D.HOURS }),
   ].join('');

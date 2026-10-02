@@ -1,10 +1,10 @@
-# Tandem — personal operations concierge (interactive prototype)
+# Tandem Concierge — post-lease move-in concept (interactive prototype)
 
 Live: https://jainamh029.github.io/Concierge-Tandem/
 
-A static prototype that shows one believable workflow end to end: a founder asks for a client dinner, Tandem checks constraints, applies saved preferences, compares options, and **asks for approval** before the (simulated) reservation and calendar invite.
+A static concept for what could follow Tandem's office search: a team signs a lease, then a concierge plans the move-in. The demo walks one workflow end to end: Tandem checks lease dates and constraints, applies saved preferences, compares furniture options, builds a start-by timeline for four vendor requests, and **asks for approval** before the (simulated) outreach and calendar deadlines.
 
-All restaurants, prices, walking times, calendars, and activity are **sample data**. Nothing is booked, sent, or paid for.
+All vendors, costs, lead times, calendars, and activity are **sample data**. Nothing is contacted, sent, or paid for.
 
 ## Structure
 
@@ -17,7 +17,7 @@ js/components.js    Reusable components: Button, Card, Chip, WorkflowStep,
                     OptionCard, ApprovalPanel, UseCaseCard, ComparisonTable, Field
 js/demo.js          Task simulation state machine (7 stages, compare, adjust, approve)
 js/main.js          Page wiring, trust panel, early-access form
-move-in/            The earlier move-in coordination dashboard (kept for reference)
+move-in/            Earlier prototype: a dashboard for a concierge team running several move-ins at once
 ```
 
 No build step. Scripts are classic (not ES modules), so `index.html` also works when opened directly from disk.

@@ -1,4 +1,4 @@
-/* Task simulation: a small state machine that walks the client-dinner example
+/* Task simulation: a small state machine that walks a post-lease move-in request
    through seven stages. Nothing here talks to a real service. */
 (function () {
   const D = window.TandemData;
@@ -26,20 +26,34 @@
   });
   let s = fresh();
 
+  /* ---------- Dates and formatting ---------- */
+  const addDays = (n) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + n);
+    return d;
+  };
+  const fmt = (d, o) => d.toLocaleDateString('en-US', o || { month: 'short', day: 'numeric' });
+  const fmtLong = (d) => fmt(d, { weekday: 'long', month: 'long', day: 'numeric' });
+  const money = (n) => '$' + n.toLocaleString('en-US');
+  const moveInDate = () => addDays(D.MOVE_IN_WEEKS * 7);
+
   /* ---------- Evaluation ---------- */
   function evaluate(opt) {
     const c = s.constraints;
     const reasons = [];
-    if (opt.pp > c.budget) reasons.push('Over budget');
-    if (opt.walk > c.maxWalk) reasons.push('Too far');
-    if (c.savedCuisineOnly && !D.SAVED_CUISINES.includes(opt.cuisine)) reasons.push('Not a saved cuisine');
-    return { opt, reasons, eligible: reasons.length === 0, timeDiff: Math.abs(opt.timeMin - D.REQUESTED_TIME_MIN) };
+    if (opt.cost > c.budget) reasons.push('Over budget');
+    if (opt.lead > c.maxLead) reasons.push('Lead time too long');
+    else if (opt.lead > D.MOVE_IN_WEEKS) reasons.push('Arrives after move-in');
+    if (c.flexOnly && opt.flexible !== true) reasons.push('Does not fit a 12-month term');
+    return { opt, reasons, eligible: reasons.length === 0 };
   }
   const evaluated = () => D.OPTIONS.map(evaluate);
+  const flexRank = (o) => (o.flexible === true ? 0 : o.flexible === 'partial' ? 1 : 2);
   function ranked() {
     return evaluated()
       .filter((e) => e.eligible)
-      .sort((a, b) => a.timeDiff - b.timeDiff || a.opt.walk - b.opt.walk || a.opt.pp - b.opt.pp);
+      .sort((a, b) => flexRank(a.opt) - flexRank(b.opt) || a.opt.lead - b.opt.lead || a.opt.cost - b.opt.cost);
   }
   const bestOption = () => (ranked()[0] || {}).opt || null;
   function selectedOption() {
@@ -47,25 +61,35 @@
     return eligible.find((o) => o.id === s.selectedId) || eligible[0] || null;
   }
 
-  const summary = (o) => `${o.name} — ${o.time} — ${o.cuisine} — estimated $${o.pp}/person — ${o.walk}-minute walk`;
-  const tomorrow = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  };
+  const summary = (o) => `${o.name} — est. ${money(o.cost)} — ${o.lead}-week lead time — ${o.note}`;
 
   function reasonsFor(opt) {
-    const r = [];
-    const diff = Math.abs(opt.timeMin - D.REQUESTED_TIME_MIN);
-    r.push(diff === 0 ? 'Table at your requested 7:30 PM' : `Closest available time: ${opt.time} (${diff} min off 7:30 PM)`);
-    r.push(`About $${opt.pp}/person, within your $${s.constraints.budget} target`);
-    r.push(`${opt.walk}-minute walk from the client meeting`);
-    r.push(
-      D.SAVED_CUISINES.includes(opt.cuisine)
-        ? `${opt.cuisine} is one of your saved cuisines`
-        : `${opt.cuisine} is not one of your saved cuisines`
-    );
-    return r;
+    const c = s.constraints;
+    return [
+      `About ${money(opt.cost)}, within your ${money(c.budget)} furniture budget`,
+      `${opt.lead}-week lead time, so it arrives ${D.MOVE_IN_WEEKS - opt.lead} week${D.MOVE_IN_WEEKS - opt.lead === 1 ? '' : 's'} before move-in`,
+      opt.flexible === true
+        ? 'Fits a 12-month lease: return or renew at the end'
+        : opt.flexible === 'partial'
+        ? 'Partly flexible: the purchased desks stay with you'
+        : 'You own it, which is harder to move or resell on a short lease',
+    ];
+  }
+
+  // Start-by timeline for the four vendor requests.
+  function plan(sel) {
+    const rows = [{ id: 'furniture', name: 'Furniture — ' + sel.name, lead: sel.lead }, ...D.VENDORS];
+    return rows
+      .map((r) => {
+        const startInWeeks = D.MOVE_IN_WEEKS - r.lead;
+        return { ...r, now: startInWeeks <= 0, date: addDays(Math.max(0, startInWeeks) * 7) };
+      })
+      .sort((a, b) => b.lead - a.lead);
+  }
+
+  function internetDraft() {
+    const d = fmtLong(moveInDate());
+    return `Subject: Internet service — new Boston office\n\nHi,\n\nWe need internet service installed and tested at our new Boston office (4,200 sq ft, 24 people) before ${d}. Please share available plans and your typical install lead time.\n\nThanks,\n[Your name]`;
   }
 
   /* ---------- Rendering ---------- */
@@ -93,6 +117,18 @@
     }).join('')}</ol>`;
   }
 
+  function detectedConstraints() {
+    return [
+      '24 people',
+      '4,200 sq ft, Boston',
+      '12-month lease',
+      `Move-in ${fmt(moveInDate())} (${D.MOVE_IN_WEEKS} weeks out)`,
+      `Furniture under ${money(D.DEFAULT_CONSTRAINTS.budget)}`,
+      'Furniture, internet, access badges, insurance',
+      'Vendor requests sent and deadlines added to calendar after approval',
+    ];
+  }
+
   function renderResults() {
     const parts = [];
     const done = s.doneUpTo;
@@ -104,19 +140,18 @@
     }
 
     if (done > 0) {
-      const adjusted =
-        s.constraints.budget !== D.DEFAULT_CONSTRAINTS.budget ||
-        s.constraints.maxWalk !== D.DEFAULT_CONSTRAINTS.maxWalk ||
-        s.constraints.savedCuisineOnly;
+      const c = s.constraints;
+      const dc = D.DEFAULT_CONSTRAINTS;
+      const adjusted = c.budget !== dc.budget || c.maxLead !== dc.maxLead || c.flexOnly;
       parts.push(
         section(
           'constraints',
           `<h3>Detected constraints</h3>
-          <ul class="chips">${D.CONSTRAINTS.map((c) => `<li>${UI.Chip(c)}</li>`).join('')}</ul>
+          <ul class="chips">${detectedConstraints().map((x) => `<li>${UI.Chip(x)}</li>`).join('')}</ul>
           ${
             adjusted
-              ? `<p class="fine">Adjusted by you: up to $${s.constraints.budget}/person, up to a ${s.constraints.maxWalk}-minute walk${
-                  s.constraints.savedCuisineOnly ? ', saved cuisines only' : ''
+              ? `<p class="fine">Adjusted by you: furniture up to ${money(c.budget)}, lead time up to ${c.maxLead} weeks${
+                  c.flexOnly ? ', 12-month-friendly terms only' : ''
                 }.</p>`
               : ''
           }`
@@ -125,38 +160,36 @@
     }
 
     if (done > 1) {
+      const rows = [
+        { when: fmt(moveInDate()), what: 'Lease start and move-in day', state: 'Fixed', kind: 'muted' },
+        { when: 'Before move-in', what: 'Building typically requires an insurance certificate and a freight elevator booking', state: 'Required', kind: 'warn' },
+        { when: 'Next 2 weeks', what: 'Your calendar has open blocks for vendor calls', state: 'Free', kind: 'ok' },
+      ];
       parts.push(
         section(
           'calendar',
-          `<h3>Calendar check <span class="tag">Sample calendar</span></h3>
-          <ul class="rows">${D.CALENDAR_CHECK.map(
-            (r) => `<li><span class="row-when">${UI.esc(r.when)}</span><span>${UI.esc(r.what)}</span><span class="badge badge-${
-              r.state === 'Free' ? 'ok' : 'muted'
-            }">${UI.esc(r.state)}</span></li>`
-          ).join('')}</ul>`
+          `<h3>Lease and calendar check <span class="tag">Sample data</span></h3>
+          <ul class="rows">${rows
+            .map((r) => `<li><span class="row-when">${UI.esc(r.when)}</span><span>${UI.esc(r.what)}</span><span class="badge badge-${r.kind}">${UI.esc(r.state)}</span></li>`)
+            .join('')}</ul>`
         )
       );
     }
 
     if (done > 2) {
       parts.push(
-        section(
-          'prefs',
-          `<h3>Preference match</h3>
-          <ul class="checks">${D.PREFERENCE_MATCH.map((p) => `<li>${UI.esc(p)}</li>`).join('')}</ul>`
-        )
+        section('prefs', `<h3>Preference match</h3><ul class="checks">${D.PREFERENCE_MATCH.map((p) => `<li>${UI.esc(p)}</li>`).join('')}</ul>`)
       );
     }
 
     if (done > 3) {
-      const ev = evaluated();
       const best = bestOption();
       const sel = selectedOption();
       parts.push(
         section(
           'options',
-          `<h3>Recommended options <span class="tag">Sample data</span></h3>
-          <div class="options">${ev
+          `<h3>Furniture options <span class="tag">Sample data</span></h3>
+          <div class="options">${evaluated()
             .map((e) => {
               const badges = [];
               if (best && e.opt.id === best.id) badges.push({ kind: 'accent', text: 'Best fit' });
@@ -170,13 +203,20 @@
     }
 
     if (done > 4) {
-      const best = bestOption();
-      if (best) {
+      const sel = selectedOption();
+      if (sel) {
+        const p = plan(sel);
         parts.push(
           section(
-            'recommendation-' + best.id,
-            `<h3>Best fit: ${UI.esc(best.name)}</h3>
-            <ul class="checks">${reasonsFor(best).map((r) => `<li>${UI.esc(r)}</li>`).join('')}</ul>`
+            'recommendation-' + sel.id,
+            `<h3>Best fit: ${UI.esc(sel.name)}</h3>
+            <ul class="checks">${reasonsFor(sel).map((r) => `<li>${UI.esc(r)}</li>`).join('')}</ul>
+            <h3 class="sub">Move-in plan: 4 vendor requests, drafts ready</h3>
+            <ul class="rows plan">${p
+              .map(
+                (r) => `<li><span class="row-when">${r.now ? 'Send now' : 'Start by ' + fmt(r.date)}</span><span>${UI.esc(r.name)}</span><span class="badge badge-${r.now ? 'warn' : 'muted'}">${r.now ? 'Start now' : 'Upcoming'}</span></li>`
+              )
+              .join('')}</ul>`
           )
         );
       } else {
@@ -184,7 +224,7 @@
           section(
             'recommendation-none',
             `<h3>No option fits these constraints</h3>
-            <p>Nothing in the sample set meets your budget, walking distance, and cuisine settings together. Loosen one and Tandem will re-rank.</p>`
+            <p>Nothing in the sample set meets your budget, lead time, and lease-term settings together. Loosen one and Tandem will re-rank.</p>`
           )
         );
       }
@@ -196,13 +236,13 @@
       if (sel) {
         parts.push(
           `<section class="result">${UI.ApprovalPanel({
-            text: `Ready to reserve ${sel.name} for 4 at ${sel.time} and add it to your calendar.`,
+            text: `Ready to send 4 vendor requests (furniture: ${sel.name}, internet, access badges, insurance) and add 4 deadlines to your calendar.`,
             buttons: [
-              { label: 'Approve reservation', variant: 'primary', action: 'approve' },
+              { label: 'Approve and send requests', variant: 'primary', action: 'approve' },
               { label: s.panel === 'compare' ? 'Hide comparison' : 'Compare options', action: 'compare' },
               { label: s.panel === 'adjust' ? 'Hide constraints' : 'Adjust constraints', action: 'adjust' },
             ],
-            note: 'Simulation only. Approving does not contact a restaurant or touch a real calendar.',
+            note: 'Simulation only. Approving does not contact a vendor or touch a real calendar.',
           })}</section>`
         );
       } else {
@@ -220,9 +260,9 @@
     if (s.phase === 'executing' || s.phase === 'done') {
       const sel = selectedOption();
       parts.push(
-        `<section class="result"><div class="approval approval-approved"><p class="eyebrow">Approved</p><p class="approval-text">You approved: reserve ${UI.esc(
+        `<section class="result"><div class="approval approval-approved"><p class="eyebrow">Approved</p><p class="approval-text">You approved: send 4 vendor requests (furniture: ${UI.esc(
           sel.name
-        )} for 4 at ${UI.esc(sel.time)} and add it to your calendar.</p></div></section>`
+        )}, internet, access badges, insurance) and add 4 deadlines to your calendar.</p></div></section>`
       );
       parts.push(
         section(
@@ -237,23 +277,26 @@
 
     if (s.phase === 'done') {
       const sel = selectedOption();
+      const p = plan(sel);
       parts.push(
         section(
           'complete',
           `<div class="complete">
-            <h3>Reservation confirmed.</h3>
+            <h3>Vendor requests sent.</h3>
             <ul class="checks">
-              <li>Reservation confirmed.</li>
-              <li>Calendar invite created.</li>
-              <li>Confirmation details saved in Tandem.</li>
+              <li>4 vendor requests sent.</li>
+              <li>4 deadlines added to your calendar.</li>
+              <li>Replies will be tracked in Tandem.</li>
             </ul>
-            <div class="event" aria-label="Sample calendar event">
-              <p class="event-title">Client dinner — ${UI.esc(sel.name)}</p>
-              <p>${UI.esc(tomorrow())} · ${UI.esc(sel.time)} · 4 guests</p>
-              <p class="fine">${UI.esc(sel.cuisine)} · about $${sel.pp}/person · ${sel.walk}-minute walk from the client meeting</p>
+            <div class="event" aria-label="Sample calendar deadlines">
+              <p class="event-title">Calendar deadlines</p>
+              <ul class="fine deadlines">${p
+                .map((r) => `<li>${UI.esc('Follow up by ' + fmt(r.now ? addDays(3) : r.date))} · ${UI.esc(r.name)}</li>`)
+                .join('')}</ul>
             </div>
-            <p class="notice">This was a simulation. No reservation, calendar event, or message was actually created.</p>
-            <div class="approval-actions">${UI.Button({ label: 'Run it again', variant: 'secondary', action: 'reset' })}
+            <details class="draft"><summary>See a sent request (internet service)</summary><pre>${UI.esc(internetDraft())}</pre></details>
+            <p class="notice">This was a simulation. No vendor was contacted and no calendar event or message was actually created.</p>
+            <div class="approval-actions">${UI.Button({ label: 'Run it again', action: 'reset' })}
             ${UI.Button({ label: 'Tell us what you would delegate', variant: 'primary', action: 'request-task' })}</div>
           </div>`
         )
@@ -267,17 +310,16 @@
     const ev = evaluated();
     const sel = selectedOption();
     const best = bestOption();
+    const flexText = (o) => (o.flexible === true ? 'Yes' : o.flexible === 'partial' ? 'Partly' : 'No');
     const rows = [
-      ['Time', (e) => e.opt.time],
-      ['Cuisine', (e) => e.opt.cuisine],
-      ['Estimated per person', (e) => UI.money(e.opt.pp)],
-      ['Estimated for 4', (e) => UI.money(e.opt.pp * 4) + ' before tax and tip'],
-      ['Walk from client meeting', (e) => e.opt.walk + ' min'],
-      ['Saved cuisine', (e) => (D.SAVED_CUISINES.includes(e.opt.cuisine) ? 'Yes' : 'No')],
+      ['Estimated total', (e) => money(e.opt.cost)],
+      ['Lead time', (e) => e.opt.lead + ' weeks'],
+      ['Arrives before move-in', (e) => (e.opt.lead < D.MOVE_IN_WEEKS ? `Yes, ${D.MOVE_IN_WEEKS - e.opt.lead} wk early` : e.opt.lead === D.MOVE_IN_WEEKS ? 'Just in time' : 'No')],
+      ['Fits a 12-month lease', (e) => flexText(e.opt)],
       ['Fits your constraints', (e) => (e.eligible ? 'Yes' : e.reasons.join(', '))],
     ];
     return `<section class="result enter panel"><h3>Compare options <span class="tag">Sample data</span></h3>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Restaurant comparison"><table class="compare compare-options">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Furniture option comparison"><table class="compare compare-options">
         <thead><tr><th scope="col"></th>${ev
           .map((e) => `<th scope="col">${UI.esc(e.opt.name)}${best && best.id === e.opt.id ? ' <span class="badge badge-accent">Best fit</span>' : ''}</th>`)
           .join('')}</tr></thead>
@@ -298,11 +340,11 @@
     const c = s.constraints;
     return `<section class="result enter panel"><h3>Adjust constraints</h3>
       <div class="adjust">
-        <div class="field"><label for="adj-budget">Maximum per person</label>
-          <select id="adj-budget">${D.BUDGET_CHOICES.map((b) => `<option value="${b}"${b === c.budget ? ' selected' : ''}>$${b}</option>`).join('')}</select></div>
-        <div class="field"><label for="adj-walk">Maximum walk from client meeting</label>
-          <select id="adj-walk">${D.WALK_CHOICES.map((w) => `<option value="${w}"${w === c.maxWalk ? ' selected' : ''}>${w} minutes</option>`).join('')}</select></div>
-        <label class="check"><input type="checkbox" id="adj-cuisine"${c.savedCuisineOnly ? ' checked' : ''}> Only my saved cuisines (Italian, Japanese, New American)</label>
+        <div class="field"><label for="adj-budget">Furniture budget</label>
+          <select id="adj-budget">${D.BUDGET_CHOICES.map((b) => `<option value="${b}"${b === c.budget ? ' selected' : ''}>Up to ${money(b)}</option>`).join('')}</select></div>
+        <div class="field"><label for="adj-lead">Maximum lead time</label>
+          <select id="adj-lead">${D.LEAD_CHOICES.map((w) => `<option value="${w}"${w === c.maxLead ? ' selected' : ''}>${w} weeks</option>`).join('')}</select></div>
+        <label class="check"><input type="checkbox" id="adj-flex"${c.flexOnly ? ' checked' : ''}> Only options that fit a 12-month lease</label>
       </div>
       <div class="approval-actions">${UI.Button({ label: 'Apply and re-rank', variant: 'primary', action: 'apply-adjust' })}${UI.Button({
         label: 'Reset to original',
@@ -312,8 +354,8 @@
 
   function renderUnsupported() {
     return `<div class="unsupported"><h3>This demo only simulates one task.</h3>
-      <p>Right now it walks through the client dinner example end to end. Your request is the kind of thing we want to learn from.</p>
-      <div class="approval-actions">${UI.Button({ label: 'Run the client dinner example', variant: 'primary', action: 'run-example' })}${UI.Button({
+      <p>Right now it walks through planning a move-in after a lease is signed, end to end. Your request is the kind of thing we want to learn from.</p>
+      <div class="approval-actions">${UI.Button({ label: 'Run the move-in example', variant: 'primary', action: 'run-example' })}${UI.Button({
         label: 'Tell us you would want this',
         action: 'request-task',
       })}</div></div>`;
@@ -321,8 +363,8 @@
 
   function render() {
     if (s.phase === 'idle') {
-      out.innerHTML = `<div class="placeholder"><p><strong>Run the task to watch Tandem work.</strong></p>
-        <p>You will see each step, then an approval request. Nothing here books, sends, or buys anything.</p></div>`;
+      out.innerHTML = `<div class="placeholder"><p><strong>Run the task to watch Tandem plan a move-in.</strong></p>
+        <p>You will see each step, then an approval request. Nothing here contacts a vendor, books, or pays for anything.</p></div>`;
     } else if (s.phase === 'unsupported') {
       out.innerHTML = renderUnsupported();
     } else {
@@ -338,7 +380,7 @@
     const sel = s.phase === 'awaiting' ? selectedOption() : null;
     return {
       phase: s.phase,
-      pending: sel ? `Reserve ${sel.name} for 4 at ${sel.time} and add to calendar` : null,
+      pending: sel ? `Send 4 vendor requests (furniture: ${sel.name}) and add 4 deadlines to calendar` : null,
       completed: s.phase === 'done' ? selectedOption() : null,
     };
   }
@@ -367,15 +409,14 @@
   }
 
   function start() {
-    const text = input.value.trim();
-    if (!text) input.value = D.DEMO_PROMPT;
+    if (!input.value.trim()) input.value = D.DEMO_PROMPT;
     const prompt = input.value.trim();
     s.runId++;
     s = fresh();
-    if (!/dinner/i.test(prompt)) {
+    if (!/lease|move-?\s?in/i.test(prompt) || /dinner|lunch/i.test(prompt)) {
       s.phase = 'unsupported';
       render();
-      announce('This demo only simulates the client dinner example.');
+      announce('This demo only simulates the move-in example.');
       return;
     }
     s.edited = prompt !== D.DEMO_PROMPT;
@@ -406,7 +447,7 @@
     s.doneUpTo = 7;
     s.phase = 'done';
     render();
-    announce('Simulated reservation confirmed. Calendar invite created. Confirmation details saved.');
+    announce('Simulated: vendor requests sent, deadlines added, reply tracking set up.');
     track(EVENTS.DEMO_COMPLETED, { option: sel.id });
   }
 
@@ -420,8 +461,8 @@
   function applyAdjust() {
     s.constraints = {
       budget: Number(document.getElementById('adj-budget').value),
-      maxWalk: Number(document.getElementById('adj-walk').value),
-      savedCuisineOnly: document.getElementById('adj-cuisine').checked,
+      maxLead: Number(document.getElementById('adj-lead').value),
+      flexOnly: document.getElementById('adj-flex').checked,
     };
     s.panel = null;
     s.selectedId = null;

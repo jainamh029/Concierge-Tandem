@@ -1,7 +1,9 @@
-/* Mock data for the Tandem demo. Everything here is sample content. */
+/* Mock data and copy for the Tandem Concierge demo. Everything here is sample content. */
 (function () {
+  const MOVE_IN_WEEKS = 5; // sample lease starts five weeks from today
+
   const DEMO_PROMPT =
-    'Plan a client dinner for 4 near Back Bay tomorrow at 7:30 PM. Quiet enough to talk, under $100 per person, and add the final reservation to my calendar.';
+    'We just signed a 12-month lease for a 4,200 sq ft office in Boston. 24 people move in five weeks from today. Get us ready: furniture under $60k, internet, access badges, and insurance. Send the vendor requests and put the deadlines on my calendar.';
 
   const CONFIG = {
     // Set to a form endpoint (e.g. Formspree) to receive submissions.
@@ -11,128 +13,116 @@
   };
 
   const CHIPS = [
-    { label: 'Rebook my canceled flight', text: 'Rebook my canceled flight to Boston and keep my 9:00 AM meeting.' },
-    { label: 'Find time for a dentist appointment', text: 'Find time for a dentist appointment next week outside my meeting blocks.' },
-    { label: 'Plan a client dinner', text: DEMO_PROMPT },
-    { label: 'Coordinate a weekend trip', text: 'Coordinate a weekend trip to Montreal for two, leaving Friday after 3 PM.' },
-    { label: 'Handle my recurring life admin', text: 'Handle my recurring life admin: car registration, dry cleaning pickup, and annual physical.' },
+    { label: 'Plan our move-in', text: DEMO_PROMPT },
+    { label: 'Set up internet and access badges', text: 'Set up internet and access badges for our new 24-person office before day one.' },
+    { label: 'Book a team welcome lunch', text: 'Book a welcome lunch for 24 people on our first day in the new office.' },
+    { label: 'Plan a client dinner near the office', text: 'Plan a client dinner for 4 near the new office next Thursday at 7:30 PM, under $100 per person.' },
+    { label: 'Handle building paperwork', text: 'Handle the building paperwork: certificate of insurance, deposits, and freight elevator booking.' },
   ];
 
   const STAGES = [
     { title: 'Understand request', running: 'Reading the request and pulling out constraints' },
-    { title: 'Check calendar constraints', running: 'Checking tomorrow evening for conflicts' },
+    { title: 'Check lease and calendar', running: 'Checking lease dates, building rules, and your calendar' },
     { title: 'Apply saved preferences', running: 'Matching against your saved preferences' },
-    { title: 'Research and compare options', running: 'Comparing candidate restaurants' },
-    { title: 'Prepare a recommendation', running: 'Ranking options against your constraints' },
+    { title: 'Research and compare options', running: 'Comparing furniture approaches' },
+    { title: 'Prepare a recommendation', running: 'Building the move-in plan' },
     { title: 'Ask for approval', running: 'Waiting for your decision' },
-    { title: 'Complete the selected action', running: 'Carrying out the action you approved' },
+    { title: 'Complete the approved actions', running: 'Carrying out what you approved' },
   ];
-  // How long each automatic stage "works", in ms (stages 0-4).
-  const STAGE_MS = [900, 1000, 900, 1400, 900];
-
-  const CONSTRAINTS = [
-    '4 guests',
-    'Tomorrow, 7:30 PM',
-    'Back Bay',
-    'Quiet / client appropriate',
-    'Target: under $100 per person',
-    'Calendar event required after booking',
-  ];
-
-  const CALENDAR_CHECK = [
-    { when: 'Tomorrow, 6:00–7:00 PM', what: 'Client meeting, Back Bay', state: 'Existing' },
-    { when: 'Tomorrow, 7:30–9:30 PM', what: 'Open — no conflicts', state: 'Free' },
-  ];
+  const STAGE_MS = [900, 1000, 900, 1400, 1000];
 
   const PREFERENCE_MATCH = [
-    'Avoids loud venues',
-    'Prioritizes tables with reservation availability',
-    'Uses your saved preference for Italian, Japanese, and New American cuisine',
-    'Checks that the location is within a reasonable distance from the client meeting',
+    'Prefers terms that fit a 12-month lease',
+    'Avoids vendors with install lead times over 6 weeks',
+    'Asks before any payment or deposit',
+    'Wants one summary of replies, not a dozen email threads',
   ];
 
-  const SAVED_CUISINES = ['Italian', 'Japanese', 'New American'];
-
-  const REQUESTED_TIME_MIN = 19 * 60 + 30;
-
+  // Furniture approaches. `flexible` true = fits a 12-month term.
   const OPTIONS = [
-    { id: 'srv', label: 'Option A', name: 'SRV', time: '7:30 PM', timeMin: 19 * 60 + 30, cuisine: 'Italian', pp: 85, walk: 6 },
-    { id: 'ostra', label: 'Option B', name: 'Ostra', time: '7:45 PM', timeMin: 19 * 60 + 45, cuisine: 'Seafood', pp: 95, walk: 8 },
-    { id: 'faccia', label: 'Option C', name: 'Faccia a Faccia', time: '7:15 PM', timeMin: 19 * 60 + 15, cuisine: 'Italian', pp: 80, walk: 10 },
+    { id: 'rental', label: 'Option A', name: 'Furniture rental package', cost: 36000, lead: 3, flexible: true, note: 'Fits the 12-month term; return or renew at the end' },
+    { id: 'mixed', label: 'Option B', name: 'Buy desks, rent lounge and meeting rooms', cost: 52000, lead: 5, flexible: 'partial', note: 'Part owned, part flexible' },
+    { id: 'buy', label: 'Option C', name: 'Buy everything new', cost: 68000, lead: 7, flexible: false, note: 'You own it; hard to move or resell on a short lease' },
   ];
 
-  const DEFAULT_CONSTRAINTS = { budget: 100, maxWalk: 15, savedCuisineOnly: false };
-  const BUDGET_CHOICES = [70, 80, 90, 100, 120];
-  const WALK_CHOICES = [5, 10, 15, 20];
+  // Non-furniture vendor requests. Furniture lead time comes from the chosen option.
+  const VENDORS = [
+    { id: 'internet', name: 'Internet service', lead: 6 },
+    { id: 'access', name: 'Access badges', lead: 6 },
+    { id: 'insurance', name: 'Insurance', lead: 4 },
+  ];
+
+  const DEFAULT_CONSTRAINTS = { budget: 60000, maxLead: 6, flexOnly: false };
+  const BUDGET_CHOICES = [40000, 50000, 60000, 80000];
+  const LEAD_CHOICES = [3, 4, 6, 8];
 
   const EXEC_STEPS = [
-    'Requesting the table',
-    'Creating the calendar invite',
-    'Saving confirmation details',
+    'Sending the vendor requests',
+    'Adding the deadlines to your calendar',
+    'Setting up reply tracking',
   ];
 
   const HOW_STEPS = [
     { title: 'Ask naturally', text: 'Tell Tandem what you need in plain English.' },
-    { title: 'Tandem coordinates', text: 'It checks your preferences, availability, timing, location, and constraints.' },
+    { title: 'Tandem coordinates', text: 'It checks your lease dates, building rules, preferences, timing, and constraints.' },
     { title: 'You approve important actions', text: 'Tandem never books, buys, sends, or changes your calendar without permission.' },
-    { title: 'The task gets completed', text: 'Tandem organizes confirmations, updates, and next steps in one place.' },
+    { title: 'The task gets completed', text: 'Tandem organizes requests, replies, and next steps in one place.' },
   ];
 
   const COMPARISON = {
-    columns: ['Capability', 'Search or Chatbot', 'Traditional Assistant', 'Tandem'],
+    columns: ['Capability', 'Chatbot', 'Spreadsheet and email', 'Tandem Concierge'],
     rows: [
-      ['Finds options', 'Yes', 'Yes', 'Yes'],
-      ['Uses your preferences', 'Limited', 'Yes', 'Yes'],
-      ['Coordinates multiple steps', 'No', 'Yes', 'Yes'],
-      ['Works instantly, anytime', 'Yes', 'No', 'Yes'],
-      ['Requires approval for important actions', 'Varies', 'Yes', 'Yes'],
-      ['Tracks confirmations and follow-ups', 'No', 'Yes', 'Yes'],
-      ['Learns repeatable workflows', 'No', 'Limited', 'Yes'],
+      ['Finds vendor options', 'Yes', 'Manual', 'Yes'],
+      ['Uses your lease details and preferences', 'Limited', 'Manual', 'Yes'],
+      ['Coordinates several vendors and deadlines', 'No', 'Manual', 'Yes'],
+      ['Works instantly, anytime', 'Yes', 'Yes', 'Yes'],
+      ['Requires approval before anything is sent', 'Varies', 'Yes', 'Yes'],
+      ['Tracks replies and follow-ups', 'No', 'Manual', 'Yes'],
+      ['Reuses the plan for your next office', 'No', 'Manual', 'Yes'],
     ],
   };
 
   const USE_CASES = [
-    { tag: 'Meetings and dining', title: 'Client and team coordination', text: 'Find a restaurant, coordinate attendees, send the details, and protect the time on your calendar.' },
-    { tag: 'Travel', title: 'Travel recovery', text: 'When travel changes, Tandem prepares alternatives, tracks constraints, and helps rebuild the itinerary.' },
-    { tag: 'Personal admin', title: 'Appointments and life admin', text: 'Turn recurring chores—appointments, reservations, forms, renewals, and household coordination—into an organized workflow.' },
-    { tag: 'Memory', title: 'Recurring preferences', text: 'Tandem remembers how you travel, where you prefer to meet, your schedule rules, and when to ask for approval.' },
+    { tag: 'Move-in', title: 'Move-in coordination', text: 'Furniture, internet, access badges, insurance, and deposits. Tandem prepares each vendor request from your lease details and sends it after you approve.' },
+    { tag: 'Timeline', title: 'Lease-to-launch timeline', text: 'See what has to start now and what can wait, based on your move-in date, headcount, and building rules.' },
+    { tag: 'Concierge', title: 'Team and client logistics', text: 'Welcome lunches, client dinners, and visitor access for a new office. Nothing is booked until you approve.' },
+    { tag: 'Memory', title: 'Recurring preferences', text: 'Tandem remembers your vendors, building rules, lead-time limits, and approval settings, so the next office starts further along.' },
   ];
 
   const PRINCIPLES = [
     'Tandem prepares; you approve.',
-    'No bookings, purchases, messages, or calendar edits without permission.',
+    'No vendor is contacted, no payment is made, and nothing is added to your calendar without permission.',
     'Preferences are visible, editable, and removable.',
     'Activity is logged so you can see what Tandem did and why.',
     'Sensitive account connections are optional and only used for the task you authorize.',
   ];
 
   const SAVED_PREFERENCES = [
-    'Avoids loud venues',
-    'Italian, Japanese, New American',
-    'Keeps 12–1 PM free',
-    'Aisle seat on flights',
+    'Terms that fit a 12-month lease',
+    'Install lead time under 6 weeks',
     'Asks before any payment',
+    'One summary of replies',
+    'Keeps 12–1 PM free',
   ];
 
   const CONNECTED_TOOLS = [
-    { name: 'Google Calendar', note: 'Used only to check conflicts and add approved events' },
-    { name: 'Gmail', note: 'Used only to send messages you approve' },
-    { name: 'Slack', note: 'Used only to share details you approve' },
+    { name: 'Google Calendar', note: 'Used only to add deadlines you approve' },
+    { name: 'Gmail', note: 'Used only to send requests you approve' },
+    { name: 'Slack', note: 'Used only to share updates you approve' },
   ];
 
   const SEED_ACTIVITY = [
-    { text: 'Prepared 3 alternative flights for review. No rebooking made.', when: 'Yesterday' },
-    { text: 'Drafted a message to the client. Waiting on your approval; not sent.', when: 'Yesterday' },
-    { text: 'Saved your preference: avoids loud venues.', when: 'Mon' },
+    { text: 'Prepared 3 furniture options for review. Nothing ordered.', when: 'Yesterday' },
+    { text: 'Drafted the insurance request. Waiting on your approval; not sent.', when: 'Yesterday' },
+    { text: 'Saved your preference: asks before any payment.', when: 'Mon' },
   ];
 
-  const ROLES = ['Founder / CEO', 'Executive', 'Operator', 'Investor', 'Consultant / advisor', 'Other'];
+  const ROLES = ['Founder / CEO', 'Operations / office manager', 'Executive', 'Broker / real estate', 'Tandem team', 'Other'];
   const HOURS = ['Under 2', '2–5', '5–10', '10+'];
 
   window.TandemData = {
-    DEMO_PROMPT, CONFIG, CHIPS, STAGES, STAGE_MS, CONSTRAINTS, CALENDAR_CHECK, PREFERENCE_MATCH,
-    SAVED_CUISINES, REQUESTED_TIME_MIN, OPTIONS, DEFAULT_CONSTRAINTS, BUDGET_CHOICES, WALK_CHOICES,
-    EXEC_STEPS, HOW_STEPS, COMPARISON, USE_CASES, PRINCIPLES, SAVED_PREFERENCES, CONNECTED_TOOLS,
-    SEED_ACTIVITY, ROLES, HOURS,
+    MOVE_IN_WEEKS, DEMO_PROMPT, CONFIG, CHIPS, STAGES, STAGE_MS, PREFERENCE_MATCH, OPTIONS, VENDORS,
+    DEFAULT_CONSTRAINTS, BUDGET_CHOICES, LEAD_CHOICES, EXEC_STEPS, HOW_STEPS, COMPARISON, USE_CASES,
+    PRINCIPLES, SAVED_PREFERENCES, CONNECTED_TOOLS, SEED_ACTIVITY, ROLES, HOURS,
   };
 })();
