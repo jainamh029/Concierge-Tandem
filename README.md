@@ -28,11 +28,12 @@ js/components.js    Reusable components: Hero, DiscoveryStep, AIBrief, ListingCa
                     MatchExplanation, ComparisonTable, DecisionMemo, TourItinerary,
                     TourPlanner, HumanAIBoundary, InsightCard, CtaForm
 js/app.js           State and event wiring
+js/fx.js            Motion helpers: scroll reveal, animated bars, count-up numbers
 js/analytics.js     Event placeholders
 move-in/            Earlier prototype: post-lease move-in coordination
 ```
 
-No build step. Scripts are classic (not ES modules), so `index.html` also works when opened from disk.
+Motion respects `prefers-reduced-motion` (final states render immediately). No build step. Scripts are classic (not ES modules), so `index.html` also works when opened from disk.
 
 ## Analytics events
 

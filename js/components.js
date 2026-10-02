@@ -2,6 +2,7 @@
 (function () {
   const D = window.TandemData;
   const M = window.TandemModel;
+  const FX = window.TandemFX;
   const esc = (s) =>
     String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const ids = (s) => String(s).replace(/[^a-z0-9]/gi, '');
@@ -41,6 +42,7 @@
           ${Button({ label: 'See a sample shortlist', size: 'lg', action: 'see-shortlist' })}
         </div>
         <p class="trust-line">Verified spaces. Local advisors. No cost to tenants.</p>
+        <p class="markets" aria-label="Markets">New York <span aria-hidden="true">·</span> San Francisco <span aria-hidden="true">·</span> Boston</p>
       </div>
       <aside class="preview" aria-label="Sample search preview">
         <div class="preview-bar"><span>Sample search</span>${Badge('Demo data', 'muted')}</div>
@@ -48,12 +50,27 @@
         <p class="fine">22 seats now · up to 45 in 12 months · $25,000–$32,000 / month · move in within 60 days</p>
         <ol class="preview-list">${previewRows
           .map(
-            (r, i) => `<li><span class="rank">${i + 1}</span><span class="pv-name"><strong>${esc(r.l.neighborhood)}</strong><span class="fine block">${esc(M.money(r.l.rent))}/mo · ${esc(r.l.seats[0])}–${esc(r.l.seats[1])} seats</span></span><span class="score">${r.res.total}</span></li>`
+            (r, i) => `<li style="--i:${i}"><span class="rank">${i + 1}</span><span class="pv-name"><strong>${esc(r.l.neighborhood)}</strong><span class="fine block">${esc(M.money(r.l.rent))}/mo · ${esc(r.l.seats[0])}–${esc(r.l.seats[1])} seats</span><span class="mbar" aria-hidden="true"><span data-bkey="hero-b-${r.l.id}" data-w="${r.res.total}" style="width:${FX.initW('hero-b-' + r.l.id)}%"></span></span></span><span class="score" data-ckey="hero-${r.l.id}" data-count="${r.res.total}">${FX.initC('hero-' + r.l.id)}</span></li>`
           )
           .join('')}</ol>
         <p class="fine">Tandem fit score — based on your stated priorities.</p>
       </aside>
-    </div></section>`;
+    </div>
+    ${Journey()}
+    </section>`;
+  }
+
+  // Where this prototype sits in the leasing journey. Offer and signing stay advisor-led.
+  function Journey() {
+    const steps = [
+      ['Search', true], ['Shortlist', true], ['Compare', true], ['Tour', true], ['Offer', false], ['Sign', false],
+    ];
+    return `<div class="wrap"><ol class="journey" aria-label="Leasing journey">${steps
+      .map(
+        ([n, live], i) =>
+          `<li class="${live ? 'j-live' : 'j-human'}" style="--i:${i}"><span class="j-dot" aria-hidden="true"></span><span class="j-name">${n}</span><span class="j-note">${live ? 'In this prototype' : 'Advisor-led'}</span></li>`
+      )
+      .join('')}</ol></div>`;
   }
 
   /* ---------- Discovery form ---------- */
@@ -169,7 +186,7 @@
       <p class="fine">Tandem fit score — based on your stated priorities. Not an objective rating.</p>
       <table class="mini"><thead><tr><th scope="col">Factor</th><th scope="col">Score</th><th scope="col">Weight</th><th scope="col">Points</th></tr></thead><tbody>${res.parts
         .map(
-          (p) => `<tr><th scope="row">${esc(p.label)}</th><td><span class="bar"><span style="width:${p.score}%"></span></span> ${p.score}</td><td>${Math.round(p.weight * 100)}%</td><td>${p.points.toFixed(1)}</td></tr>`
+          (p, i) => `<tr><th scope="row"><span class="fdot f${i + 1}" aria-hidden="true"></span>${esc(p.label)}</th><td><span class="bar"><span data-bkey="bd-${res.id}-${p.key}" data-w="${p.score}" style="width:${FX.initW('bd-' + res.id + '-' + p.key)}%"></span></span> ${p.score}</td><td>${Math.round(p.weight * 100)}%</td><td>${p.points.toFixed(1)}</td></tr>`
         )
         .join('')}${res.penalty ? `<tr><th scope="row">Outside preferred neighborhoods</th><td></td><td></td><td>−${res.penalty}</td></tr>` : ''}</tbody></table>
     </div>`;
@@ -181,11 +198,15 @@
     const fact = (k, v) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`;
     const tourDisabled = !ctx.inTour && ctx.tourFull;
     const compareDisabled = !ctx.inCompare && ctx.compareFull;
-    return `<article class="listing" id="listing-${l.id}" aria-labelledby="ln-${l.id}">
+    res.id = l.id;
+    return `<article class="listing reveal" data-reveal="card-${l.id}" id="listing-${l.id}" aria-labelledby="ln-${l.id}">
       <header class="listing-head">
         <div><span class="rank-tag">#${rank}</span><h3 id="ln-${l.id}">${esc(l.neighborhood)}</h3><p class="fine">${esc(l.type)}</p></div>
-        <div class="score-box" aria-label="Tandem fit score ${res.total} out of 100"><span class="score-num">${res.total}</span><span class="score-lbl">Fit score</span></div>
+        <div class="score-box" aria-label="Tandem fit score ${res.total} out of 100"><span class="score-num" data-ckey="sc-${l.id}" data-count="${res.total}">${FX.initC('sc-' + l.id)}</span><span class="score-lbl">Fit score</span></div>
       </header>
+      <div class="comp" title="How the fit score is composed, by factor" aria-hidden="true"><div class="comp-track">${res.parts
+        .map((p, i) => `<span class="seg f${i + 1}" data-bkey="cp-${l.id}-${p.key}" data-w="${(p.points).toFixed(1)}" style="width:${FX.initW('cp-' + l.id + '-' + p.key)}%"></span>`)
+        .join('')}</div></div>
       <dl class="facts">
         ${fact('Monthly rent', M.money(l.rent))}
         ${fact('Approx. size', l.sqft.toLocaleString('en-US') + ' sq ft')}
@@ -248,19 +269,26 @@
   }
 
   /* ---------- Schematic map ---------- */
-  function NeighborhoodMap({ items }) {
+  function NeighborhoodMap({ items, route = [] }) {
+    const pts = route.map((id) => items.find((x) => x.l.id === id)).filter(Boolean);
+    const routeKey = 'route-' + pts.map((x) => x.l.id).join('>');
+    const drawRoute = pts.length > 1 && FX.once(routeKey);
+    const dropPins = FX.once('map-pins');
+    const top = items[0] && items[0].l.id;
+    const path = pts.length > 1 ? 'M' + pts.map((x) => `${x.l.geo.x} ${x.l.geo.y}`).join(' L') : '';
     return `<figure class="map"><svg viewBox="0 0 100 100" role="img" aria-label="Schematic map of the shortlisted neighborhoods in Manhattan, not to scale">
       <rect width="100" height="100" fill="var(--map-bg)"/>
       <rect x="0" y="0" width="9" height="100" fill="var(--map-water)"/><rect x="91" y="0" width="9" height="100" fill="var(--map-water)"/>
       <g stroke="var(--map-line)" stroke-width=".4">${[18, 30, 42, 54, 66, 78, 90].map((y) => `<line x1="9" x2="91" y1="${y}" y2="${y}"/>`).join('')}${[22, 36, 50, 64, 78].map((x) => `<line y1="0" y2="100" x1="${x}" x2="${x}"/>`).join('')}</g>
       <text x="4.5" y="50" font-size="3" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 4.5 50)">HUDSON RIVER</text>
       <text x="95.5" y="50" font-size="3" fill="var(--muted)" text-anchor="middle" transform="rotate(90 95.5 50)">EAST RIVER</text>
+      ${path ? `<path d="${path}" class="route${drawRoute ? ' draw' : ''}" pathLength="1" fill="none"/>` : ''}
       ${items
         .map(
-          ({ l, res }) => `<g><circle cx="${l.geo.x}" cy="${l.geo.y}" r="4.2" fill="var(--blue)" stroke="#fff" stroke-width="1"/><text x="${l.geo.x}" y="${l.geo.y + 1.2}" font-size="3.4" font-weight="700" fill="#fff" text-anchor="middle">${res.total}</text><text x="${l.geo.x}" y="${l.geo.y - 6}" font-size="3.4" font-weight="600" fill="var(--ink)" text-anchor="middle">${esc(l.neighborhood)}</text></g>`
+          ({ l, res }, i) => `<g class="pin-g${dropPins ? ' drop' : ''}" style="--i:${i}">${l.id === top ? `<circle class="pulse" cx="${l.geo.x}" cy="${l.geo.y}" r="4.2"/>` : ''}<circle cx="${l.geo.x}" cy="${l.geo.y}" r="4.2" fill="var(--blue)" stroke="#fff" stroke-width="1"/><text x="${l.geo.x}" y="${l.geo.y + 1.2}" font-size="3.4" font-weight="700" fill="#fff" text-anchor="middle">${res.total}</text><text x="${l.geo.x}" y="${l.geo.y - 6}" font-size="3.4" font-weight="600" fill="var(--ink)" text-anchor="middle">${esc(l.neighborhood)}</text>${pts.includes(items[i]) ? `<circle cx="${l.geo.x + 4.4}" cy="${l.geo.y + 4.2}" r="2.2" fill="var(--navy)"/><text x="${l.geo.x + 4.4}" y="${l.geo.y + 5.3}" font-size="2.8" font-weight="700" fill="#fff" text-anchor="middle">${pts.indexOf(items[i]) + 1}</text>` : ''}</g>`
         )
         .join('')}
-    </svg><figcaption class="fine">Schematic only, not to scale. Pins show fit scores.</figcaption></figure>`;
+    </svg><figcaption class="fine">Schematic only, not to scale. Pins show fit scores${pts.length > 1 ? '; the dashed line is the sample tour route' : ''}.</figcaption></figure>`;
   }
 
   /* ---------- Comparison table + memo ---------- */
@@ -273,7 +301,7 @@
       ['Client-readiness', (x) => x.l.labels.client],
       ['Move-in speed', (x) => x.l.labels.speed],
       ['Lease flexibility', (x) => x.l.labels.flex],
-      ['Total score', (x) => String(x.res.total)],
+      ['Total score', (x) => `<span data-ckey="tot-${x.l.id}" data-count="${x.res.total}">${FX.initC('tot-' + x.l.id)}</span>`, true],
     ];
     return `<div class="table-wrap" tabindex="0" role="region" aria-label="Side-by-side comparison"><table class="compare">
       <thead><tr><th scope="col">Decision factor</th>${items
@@ -281,11 +309,24 @@
         .join('')}</tr></thead>
       <tbody>${rows
         .map(
-          (r, i) => `<tr${i === rows.length - 1 ? ' class="total"' : ''}><th scope="row">${r[0]}</th>${items.map((x) => `<td>${esc(r[1](x))}</td>`).join('')}</tr>`
+          (r, i) => `<tr${i === rows.length - 1 ? ' class="total"' : ''}><th scope="row">${r[0]}</th>${items.map((x) => `<td>${r[2] ? r[1](x) : esc(r[1](x))}</td>`).join('')}</tr>`
         )
         .join('')}</tbody></table></div>
       <p class="fine">Total score is the Tandem fit score — based on your stated priorities. Qualitative ratings are sample data.</p>
       ${others.length ? `<div class="add-row"><span class="fine">Add to comparison:</span>${others.map((o) => Button({ label: '+ ' + o.neighborhood, size: 'sm', action: 'toggle-compare', id: o.id })).join('')}</div>` : ''}`;
+  }
+
+  // Grouped, animated bars: how each compared space scores on each factor (0-100).
+  function FactorChart({ items }) {
+    const col = ['var(--navy)', 'var(--blue)', '#0E9AA7'];
+    return `<figure class="fchart"><figcaption><strong>Where each space scores well</strong><span class="fine"> Factor scores, 0–100, before weighting</span></figcaption>
+      <ul class="legend">${items.map((x, i) => `<li><span class="swatch" style="background:${col[i]}"></span>${esc(x.l.neighborhood)}</li>`).join('')}</ul>
+      <div class="frows">${D.FACTORS.map((f, fi) => `<div class="frow"><span class="flabel">${esc(f.label)}</span><div class="fbars">${items
+        .map((x, i) => {
+          const part = x.res.parts[fi];
+          return `<div class="fbar" aria-label="${esc(x.l.neighborhood)} ${esc(f.label)} ${part.score} out of 100"><span class="fill" data-bkey="fc-${x.l.id}-${f.key}" data-w="${part.score}" style="width:${FX.initW('fc-' + x.l.id + '-' + f.key)}%;background:${col[i]}"></span><span class="fval">${part.score}</span></div>`;
+        })
+        .join('')}</div></div>`).join('')}</div></figure>`;
   }
 
   function DecisionMemo({ memo }) {
@@ -342,7 +383,8 @@
   function HumanAIBoundary() {
     const col = (title, cls, items) =>
       `<div class="bcol ${cls}"><h3>${esc(title)}</h3><ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`;
-    return `<div class="boundary">${col('AI handles', 'ai', D.AI_HANDLES)}${col('A Tandem advisor handles', 'human', D.ADVISOR_HANDLES)}</div>
+    const venn = `<div class="venn reveal" data-reveal="venn" aria-hidden="true"><svg viewBox="0 0 120 56"><circle class="vc vc-ai" cx="46" cy="28" r="22"/><circle class="vc vc-human" cx="74" cy="28" r="22"/><text x="34" y="29.5" class="vt">AI</text><text x="87" y="29.5" class="vt vt-sm">Advisor</text><text x="60" y="25" class="vt vt-mid">Your</text><text x="60" y="32" class="vt vt-mid">decision</text></svg></div>`;
+    return `${venn}<div class="boundary">${col('AI handles', 'ai', D.AI_HANDLES)}${col('A Tandem advisor handles', 'human', D.ADVISOR_HANDLES)}</div>
       <p class="boundary-note">${esc(D.BOUNDARY_STATEMENT)}</p>`;
   }
 
@@ -380,6 +422,6 @@
   window.TandemUI = {
     esc, ids, Button, Chip, Badge, Field, Hero, DiscoveryStep, WorkspaceIntro, Generating, AIBrief, MatchExplanation,
     ListingCard, PrioritiesPanel, NeighborhoodMap, ComparisonTable, DecisionMemo, TourItinerary, TourPlanner,
-    HumanAIBoundary, InsightCard, CtaForm,
+    HumanAIBoundary, InsightCard, CtaForm, FactorChart, Journey,
   };
 })();

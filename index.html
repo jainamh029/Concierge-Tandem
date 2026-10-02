@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tandem Search Workspace — Find the right office faster</title>
 <meta name="description" content="A prototype workflow for finding, comparing, and touring office space: a shortlist built around how your team works, with a local advisor for the judgment calls. Sample data only.">
-<meta name="theme-color" content="#12294A">
+<meta name="theme-color" content="#0F172A">
 <meta property="og:title" content="Tandem Search Workspace">
 <meta property="og:description" content="Find the right office faster with a shortlist built around how your team works. Interactive prototype with sample data.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312294A'/%3E%3Cpath d='M9 10h14v3.4h-5.2V23h-3.6v-9.6H9z' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230F172A'/%3E%3Ccircle cx='12.5' cy='16' r='6.5' fill='none' stroke='%2338BDF8' stroke-width='2.4'/%3E%3Ccircle cx='19.5' cy='16' r='6.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -17,7 +20,7 @@
 
 <header class="nav">
   <div class="wrap nav-inner">
-    <a class="brand" href="#top" aria-label="Tandem Search Workspace home"><span class="brand-mark" aria-hidden="true">T</span>Tandem <span class="brand-sub">Search Workspace</span></a>
+    <a class="brand" href="#top" aria-label="Tandem Search Workspace home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0F172A"/><circle cx="12.5" cy="16" r="6.5" fill="none" stroke="#38BDF8" stroke-width="2.4"/><circle cx="19.5" cy="16" r="6.5" fill="none" stroke="#fff" stroke-width="2.4"/></svg>Tandem <span class="brand-sub">Search Workspace</span></a>
     <nav aria-label="Primary">
       <a href="#search">Search</a>
       <a href="#shortlist">Shortlist</a>
@@ -35,18 +38,18 @@
 
   <section class="section" id="search" aria-labelledby="search-title">
     <div class="wrap">
-      <p class="eyebrow">1 · Define requirements</p>
+      <div class="sec-head reveal" data-reveal="head-search"><p class="eyebrow">1 · Define requirements</p>
       <h2 id="search-title">Turn a vague need into a structured brief.</h2>
-      <p class="section-lede">Nine short questions, pre-filled with an example startup. Edit any answer and the brief, shortlist, and ranking change with it.</p>
+      <p class="section-lede">Nine short questions, pre-filled with an example startup. Edit any answer and the brief, shortlist, and ranking change with it.</p></div>
       <div id="workspace-mount"></div>
     </div>
   </section>
 
   <section class="section section-alt" id="shortlist" aria-labelledby="sl-title">
     <div class="wrap">
-      <p class="eyebrow">2 · Shortlist</p>
+      <div class="sec-head reveal" data-reveal="head-shortlist"><p class="eyebrow">2 · Shortlist</p>
       <h2 id="sl-title">A shortlist built around how your team works.</h2>
-      <p class="section-lede">Four sample spaces ranked by the Tandem fit score — based on your stated priorities. It is a way to organize a decision, not an objective rating.</p>
+      <p class="section-lede">Four sample spaces ranked by the Tandem fit score — based on your stated priorities. It is a way to organize a decision, not an objective rating.</p></div>
       <div id="sl-toolbar"></div>
       <div id="sl-priorities" hidden></div>
       <div id="sl-body"></div>
@@ -55,34 +58,34 @@
 
   <section class="section" id="compare" aria-labelledby="cmp-title">
     <div class="wrap">
-      <p class="eyebrow">3 · Compare</p>
-      <h2 id="cmp-title">Compare up to three spaces side by side.</h2>
+      <div class="sec-head reveal" data-reveal="head-compare"><p class="eyebrow">3 · Compare</p>
+      <h2 id="cmp-title">Compare up to three spaces side by side.</h2></div>
       <div id="compare-mount"></div>
     </div>
   </section>
 
   <section class="section section-alt" id="tours" aria-labelledby="tour-title">
     <div class="wrap">
-      <p class="eyebrow">4 · Tour</p>
+      <div class="sec-head reveal" data-reveal="head-tours"><p class="eyebrow">4 · Tour</p>
       <h2 id="tour-title">Turn a shortlist into a decision.</h2>
-      <p class="section-lede">Tandem handles the scheduling and follow-up. A local advisor handles the tour.</p>
+      <p class="section-lede">Tandem handles the scheduling and follow-up. A local advisor handles the tour.</p></div>
       <div id="tours-mount"></div>
     </div>
   </section>
 
   <section class="section" id="how" aria-labelledby="how-title">
     <div class="wrap">
-      <p class="eyebrow">Operating model</p>
-      <h2 id="how-title">AI handles the busywork. People handle the judgment.</h2>
+      <div class="sec-head reveal" data-reveal="head-how"><p class="eyebrow">Operating model</p>
+      <h2 id="how-title">AI handles the busywork. People handle the judgment.</h2></div>
       <div id="boundary-mount"></div>
     </div>
   </section>
 
   <section class="section section-alt" id="learning" aria-labelledby="learn-title">
     <div class="wrap">
-      <p class="eyebrow">Product learning</p>
+      <div class="sec-head reveal" data-reveal="head-learning"><p class="eyebrow">Product learning</p>
       <h2 id="learn-title">Every search makes Tandem smarter.</h2>
-      <p class="section-lede">Each search produces structured signals about what predicts a good match and where people need a human. These are the questions worth tracking.</p>
+      <p class="section-lede">Each search produces structured signals about what predicts a good match and where people need a human. These are the questions worth tracking.</p></div>
       <div id="insight-mount"></div>
     </div>
   </section>
@@ -111,11 +114,13 @@
 <footer class="footer">
   <div class="wrap">
     <p><strong>Tandem Search Workspace</strong> · An independent interactive concept, not an official Tandem product. All offices, prices, availability, scores, and recommendations are sample data, not live listings. No tours are booked and no one is contacted.</p>
+    <p>Markets covered by Tandem: New York, San Francisco, Boston. This demo’s sample inventory is New York only.</p>
     <p><a href="move-in/">Beyond the lease: an earlier prototype for post-lease move-in coordination</a></p>
   </div>
 </footer>
 <p id="sr-status" class="sr-only" role="status" aria-live="polite"></p>
 
+<script src="js/fx.js"></script>
 <script src="js/data.js"></script>
 <script src="js/analytics.js"></script>
 <script src="js/model.js"></script>

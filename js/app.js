@@ -7,6 +7,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FX = window.TandemFX;
   const byId = Object.fromEntries(D.LISTINGS.map((l) => [l.id, l]));
 
   const state = {
@@ -46,6 +47,7 @@
       .sort((a, b) => b.res.total - a.res.total)
       .slice(0, 3);
     $('#hero-mount').innerHTML = UI.Hero({ previewRows: rows });
+    FX.scan($('#hero-mount'));
   }
 
   function renderWorkspace() {
@@ -61,6 +63,7 @@
     } else {
       el.innerHTML = UI.AIBrief({ brief: M.buildBrief(state.a, state.insight) });
     }
+    FX.scan(el);
   }
   const focusQuestion = () => {
     const t = $('#q-title');
@@ -119,7 +122,8 @@
       .join('');
     $('#sl-body').innerHTML = `<div class="sl-layout"><div class="sl-cards">${
       cards || '<p class="empty">Your shortlist is empty. Restore a space above or adjust your requirements.</p>'
-    }</div><aside>${UI.NeighborhoodMap({ items: list })}</aside></div>`;
+    }</div><aside>${UI.NeighborhoodMap({ items: list, route: D.ROUTE_ORDER.filter((id) => state.tours.includes(id)) })}</aside></div>`;
+    FX.scan($('#sl-body'));
   }
 
   function renderCompare() {
@@ -128,10 +132,11 @@
     const items = inSet.map((id) => ({ l: byId[id], res: M.scoreListing(byId[id], state.a, w) })).sort((a, b) => b.res.total - a.res.total);
     const others = shortlist().filter((x) => !inSet.includes(x.l.id)).map((x) => x.l);
     $('#compare-mount').innerHTML = items.length
-      ? UI.ComparisonTable({ items, others: state.compare.length < 3 ? others : [] }) + UI.DecisionMemo({ memo: M.memo(items) })
+      ? UI.ComparisonTable({ items, others: state.compare.length < 3 ? others : [] }) + UI.FactorChart({ items }) + UI.DecisionMemo({ memo: M.memo(items) })
       : `<p class="empty">Pick up to three spaces to compare. Use “Compare spaces” on a card.</p>${
           others.length ? `<div class="add-row">${others.map((o) => UI.Button({ label: '+ ' + o.neighborhood, size: 'sm', action: 'toggle-compare', id: o.id })).join('')}</div>` : ''
         }`;
+    FX.scan($('#compare-mount'));
   }
 
   function renderTours() {
@@ -419,6 +424,7 @@
 
   /* ---------- Static wiring ---------- */
   $('#boundary-mount').innerHTML = UI.HumanAIBoundary();
+  FX.scan($('#boundary-mount'));
   $('#nav-start').addEventListener('click', () => startSearch('nav'));
   $('#cta-start').addEventListener('click', () => startSearch('closing_cta'));
   $('#cta-advisor').addEventListener('click', () => goAdvisor('closing_cta'));
@@ -429,6 +435,30 @@
   renderDerived();
   renderInsight();
   mountAdvisorForm();
+
+  /* ---------- Nav polish: shadow on scroll and section highlighting ---------- */
+  const nav = $('.nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  if ('IntersectionObserver' in window) {
+    const links = [...document.querySelectorAll('.nav nav a')];
+    const spy = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
+        });
+      },
+      { rootMargin: '-45% 0px -50% 0px' }
+    );
+    links.forEach((a) => {
+      const sec = document.querySelector(a.getAttribute('href'));
+      if (sec) spy.observe(sec);
+    });
+  }
+
+  FX.scan(document);
 
   window.TandemApp = { state, shortlist };
 })();
