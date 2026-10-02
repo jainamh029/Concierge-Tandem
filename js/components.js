@@ -318,7 +318,7 @@
 
   // Grouped, animated bars: how each compared space scores on each factor (0-100).
   function FactorChart({ items }) {
-    const col = ['var(--navy)', 'var(--blue)', '#0E9AA7'];
+    const col = ['var(--navy)', 'var(--blue)', '#C2703D'];
     return `<figure class="fchart"><figcaption><strong>Where each space scores well</strong><span class="fine"> Factor scores, 0–100, before weighting</span></figcaption>
       <ul class="legend">${items.map((x, i) => `<li><span class="swatch" style="background:${col[i]}"></span>${esc(x.l.neighborhood)}</li>`).join('')}</ul>
       <div class="frows">${D.FACTORS.map((f, fi) => `<div class="frow"><span class="flabel">${esc(f.label)}</span><div class="fbars">${items
